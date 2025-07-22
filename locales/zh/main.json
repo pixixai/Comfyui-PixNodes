@@ -1,0 +1,15 @@
+{
+  "color-picker": {
+    "title": "颜色选择器",
+    "rgb-mode": "RGB模式",
+    "hsv-mode": "HSV模式",
+    "hex-mode": "十六进制模式",
+    "red": "红色",
+    "green": "绿色",
+    "blue": "蓝色",
+    "hue": "色相",
+    "saturation": "饱和度",
+    "value": "明度",
+    "hex": "十六进制颜色"
+  }
+}

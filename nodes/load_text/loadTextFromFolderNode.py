@@ -1,14 +1,12 @@
-# load_text_node.py
-
 import os
 import re
-from pypinyin import lazy_pinyin, Style
 
 class LoadTextFromFolder:
     """
     A node to load text files from a specific directory and select one using an index.
     Supports natural sorting of filenames with Chinese, English, and numbers.
-    Outputs: content, file name (without extension), and index of the selected .txt file.
+    Outputs: content, file name (without extension), index, total_files.
+    Modified version that doesn't require pypinyin library.
     """
 
     @classmethod
@@ -31,10 +29,10 @@ class LoadTextFromFolder:
             }
         }
 
-    RETURN_TYPES = ("STRING", "STRING", "INT")  # 输出顺序：content, file_name, index
-    RETURN_NAMES = ("content", "file_name", "index")
+    RETURN_TYPES = ("STRING", "STRING", "INT", "INT")
+    RETURN_NAMES = ("content", "file_name", "index", "total_files")
     FUNCTION = "load_text"
-    CATEGORY = "Example"
+    CATEGORY = "pixix"
 
     def check_lazy_status(self, directory, start_index):
         return ["directory", "start_index"]
@@ -46,8 +44,8 @@ class LoadTextFromFolder:
         # 获取所有 .txt 文件
         all_files = [f for f in os.listdir(directory) if f.endswith(".txt")]
 
-        # 按拼音 + 自然排序
-        txt_files = sorted(all_files, key=self._chinese_natural_key)
+        # 使用改进的自然排序（不依赖pypinyin）
+        txt_files = sorted(all_files, key=self._natural_sort_key)
 
         if not txt_files:
             raise ValueError(f"No .txt files found in directory: {directory}")
@@ -67,22 +65,32 @@ class LoadTextFromFolder:
         except Exception as e:
             raise RuntimeError(f"Failed to read file '{selected_file}': {str(e)}")
 
-        return (content, file_name, index)
+        # 返回新增参数：总文件数
+        total_files = len(txt_files)
 
-    # 辅助函数：生成用于排序的键（中文转拼音 + 数字识别）
-    def _chinese_natural_key(self, s):
-        """将字符串拆分为中文、英文、数字部分，用于排序"""
+        return (content, file_name, index, total_files)
+
+    def _natural_sort_key(self, s):
+        """
+        改进的自然排序键函数，不依赖pypinyin
+        处理数字和中文混合文件名（中文按unicode排序）
+        """
         def convert(text):
             if text.isdigit():
                 return int(text)
-            else:
-                return lazy_pinyin(text, style=Style.NORMAL)
+            return text.lower()
 
-        parts = re.split(r'(\d+)', s)
-        return [convert(part) for part in parts]
+        return [convert(c) for c in re.split('([0-9]+)', s)]
 
-    # 可选调试方法：打印排序结果
     def _debug_print_sorted_files(self, files):
         print("Sorted Files:")
         for i, f in enumerate(files):
             print(f"{i}: {f}")
+
+NODE_CLASS_MAPPINGS = {
+    "LoadTextFromFolderNode": LoadTextFromFolder,
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "LoadTextFromFolderNode": "从文件夹加载文本",
+}

@@ -1,0 +1,15 @@
+{
+  "color-picker": {
+    "title": "Color Picker",
+    "rgb-mode": "RGB Mode",
+    "hsv-mode": "HSV Mode",
+    "hex-mode": "Hex Mode",
+    "red": "Red",
+    "green": "Green",
+    "blue": "Blue",
+    "hue": "Hue",
+    "saturation": "Saturation",
+    "value": "Value",
+    "hex": "Hex Color"
+  }
+}
