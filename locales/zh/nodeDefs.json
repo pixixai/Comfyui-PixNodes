@@ -1,0 +1,446 @@
+{
+  "Pix_ImageSplitter": {
+    "display_name": "图像切分 (Pix)",
+    "description": "将输入的图像按指定的行列平均切分，并输出为图像批次。",
+    "inputs": {
+      "image": {
+        "name": "图像",
+        "tooltip": "输入的原始图像或图像批次"
+      },
+      "horizontal": {
+        "name": "水平切分数",
+        "tooltip": "水平方向要切分的列数"
+      },
+      "vertical": {
+        "name": "垂直切分数",
+        "tooltip": "垂直方向要切分的行数"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "图像批次",
+        "tooltip": "切分后按顺序排列的图像批次结果"
+      }
+    }
+  },
+    "Pix_AnyDataIsEmpty": {
+    "display_name": "是否空值",
+    "description": "多功能数据校验节点，支持检查图片、潜空间、文本、列表等任何数据是否为空，常用于条件分支逻辑控制。",
+    "inputs": {
+      "invert": {
+        "name": "反转逻辑",
+        "tooltip": "默认（False）：空数据返回 True；开启（True）：空数据返回 False，常用于‘有数据才执行’的判断。"
+      },
+      "any_data": {
+        "name": "任意数据",
+        "tooltip": "连接需要检查的数据，支持通配符输入，可接受图片、文本、Latent 等任何类型。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "布尔",
+        "tooltip": "输出布尔值结果。若数据为空（如空字符串、空图片、None），则根据反转开关输出对应布尔值。"
+      }
+    }
+  },
+  "Pix_ColorPicker": {
+    "display_name": "拾色器",
+    "description": "支持 RGB、HSV 和 HEX 模式转换的颜色选择节点",
+    "inputs": {
+      "color_mode": {
+        "name": "颜色模式",
+        "tooltip": "选择输入颜色的表达方式",
+        "options": {
+          "RGB": "RGB 模式 (0-255)",
+          "HSV": "HSV 模式 (色相/饱和度/明度)",
+          "HEX": "HEX 模式 (16进制)"
+        }
+      },
+      "value": {
+        "name": "颜色值",
+        "tooltip": "根据所选模式输入的具体颜色数值"
+      }
+    },
+    "outputs": {
+      "0": { "name": "RGB 色值", "tooltip": "输出格式为 'R,G,B' 的字符串" },
+      "1": { "name": "RGB 整数", "tooltip": "输出 RGB 颜色的整数值" },
+      "2": { "name": "HSV 色值", "tooltip": "输出格式为 'H,S,V' 的字符串" },
+      "3": { "name": "HEX 值", "tooltip": "输出带 # 号的 16 进制颜色码" },
+      "4": { "name": "HEX 值 (纯净版)", "tooltip": "输出不带 # 号的 16 进制颜色码" }
+    }
+  },
+  "Pix_IfElseDispatcher": {
+    "display_name": "IfElse 分发器",
+    "description": "根据布尔条件将输入流分发至不同分支",
+    "inputs": {
+      "any_value": { "name": "输入值", "tooltip": "待分发的任意数据" },
+      "if_true": { "name": "是否为真", "tooltip": "控制信号" }
+    },
+    "outputs": {
+      "0": { "name": "真 (True)", "tooltip": "条件满足时的输出" },
+      "1": { "name": "假 (False)", "tooltip": "条件不满足时的输出" }
+    }
+  },
+  "Pix_IfElseLogicGate": {
+    "display_name": "IfElse 逻辑阀",
+    "description": "从两个分支中拾取有效的信号进行合并输出",
+    "inputs": {
+      "true_path": { "name": "真", "tooltip": "连接真分支信号" },
+      "false_path": { "name": "假", "tooltip": "连接假分支信号" }
+    },
+    "outputs": {
+      "0": { "name": "合并输出", "tooltip": "输出有效的信号值" }
+    }
+  },
+  "Pix_Compare": {
+    "display_name": "逻辑比较器",
+    "description": "对两个输入进行数学或逻辑比较",
+    "inputs": {
+      "a": { "name": "输入 A", "tooltip": "左侧对象" },
+      "b": { "name": "输入 B", "tooltip": "右侧对象" },
+      "comparison": {
+        "name": "比较条件",
+        "tooltip": "选择比较逻辑",
+        "options": {
+          "a == b": "等于 (==)",
+          "a != b": "不等于 (!=)",
+          "a < b": "小于 (<)",
+          "a > b": "大于 (>)",
+          "a <= b": "小于等于 (<=)",
+          "a >= b": "大于等于 (>=)"
+        }
+      }
+    },
+    "outputs": {
+      "0": { "name": "布尔", "tooltip": "返回 True 或 False" }
+    }
+  },
+  "Pix_MathInt": {
+    "display_name": "整数运算器",
+    "description": "执行基础的整数数学运算，如加减乘除",
+    "inputs": {
+      "a": { "name": "整数 A", "tooltip": "第一个运算数" },
+      "b": { "name": "整数 B", "tooltip": "第二个运算数" },
+      "operation": {
+        "name": "运算操作",
+        "tooltip": "选择要执行的数学算法",
+        "options": {
+          "add": "加法 (+)",
+          "subtract": "减法 (-)",
+          "multiply": "乘法 (×)",
+          "divide": "整除 (//)",
+          "modulo": "取模 (%)",
+          "power": "幂运算 (^)"
+        }
+      }
+    },
+    "outputs": {
+      "0": { "name": "运算结果", "tooltip": "输出计算后的整数值" }
+    }
+  },
+    "Pix_ListToImageBatch": {
+    "display_name": "图像列表转图像批次",
+    "description": "将收集到的图像列表合并为标准 Tensor 批次",
+    "inputs": {
+      "image_list": { "name": "图像列表" }
+    },
+    "outputs": {
+      "0": { "name": "图像批次" }
+    }
+  },
+  "Pix_ListFromLoop": {
+    "display_name": "从循环创建列表",
+    "description": "在循环执行过程中逐轮收集数据并累积成列表",
+    "inputs": {
+      "item": { "name": "当前项", "tooltip": "本轮循环产生的新数据" },
+      "list_in": { "name": "累积列表 (可选)", "tooltip": "连接来自上一轮循环输出的列表信号" }
+    },
+    "outputs": {
+      "0": { "name": "列表" },
+      "1": { "name": "列表数量" }
+    }
+  },
+  "Pix_LoadTextFromFolderNode": {
+    "display_name": "从文件夹加载文本",
+    "description": "从指定目录批量读取 txt 文件，并通过自然排序索引进行选择",
+    "inputs": {
+      "directory": {
+        "name": "文件夹路径",
+        "tooltip": "包含文本文件的目录绝对路径"
+      },
+      "start_index": {
+        "name": "文件索引",
+        "tooltip": "要读取的文件序号 (从 0 开始)"
+      }
+    },
+    "outputs": {
+      "0": { "name": "文本内容", "tooltip": "文件中的完整文字" },
+      "1": { "name": "文件名", "tooltip": "不带后缀的原始文件名" },
+      "2": { "name": "实际索引", "tooltip": "当前成功加载的文件序号" },
+      "3": { "name": "文件总数", "tooltip": "目录下匹配的 txt 文件总个数" }
+    }
+  },
+    "Pix_DeepSeekApiNode": {
+    "display_name": "DeepSeek 助手",
+    "description": "连接 DeepSeek API，支持对话历史、密钥持久化及推理模型",
+    "inputs": {
+      "api_key": { "name": "API 密钥", "tooltip": "填入后自动保存" },
+      "base_url": { "name": "API 地址" },
+      "model": {
+        "name": "模型选择",
+        "options": {
+          "deepseek-chat": "深度求索 V3 (Chat)",
+          "deepseek-reasoner": "深度求索 R1 (Reasoner)"
+        }
+      },
+      "prompt": { "name": "提示词" },
+      "system_instruction": { "name": "角色设定" },
+      "seed": { "name": "随机种子" },
+      "max_tokens": { "name": "最大长度" },
+      "temperature": { "name": "采样温度" },
+      "top_p": { "name": "核采样" },
+      "history": { "name": "对话历史" },
+      "input_file_text": { "name": "文本输入" }
+    },
+    "outputs": {
+      "0": { "name": "文本回复" },
+      "1": { "name": "对话历史" }
+    }
+  },
+  "Pix_DoubaoApiNode": {
+    "display_name": "豆包助手 (Doubao)",
+    "description": "连接字节跳动豆包 API，支持视觉理解、代码预览及长文本处理",
+    "inputs": {
+      "api_key": { "name": "API 密钥" },
+      "base_url": { "name": "API 地址" },
+      "model": {
+        "name": "模型选择",
+        "options": {
+          "doubao-seed-1-6-flash-250828": "豆包 1.6 Flash (高速)",
+          "doubao-seed-1-8-251215": "豆包 1.8 Pro (强大)",
+          "doubao-seed-code-preview-251028": "豆包代码预览版",
+          "doubao-seed-1-6-vision-250815": "豆包视觉模型 (Vision)"
+        }
+      },
+      "prompt": { "name": "提示词" },
+      "system_instruction": { "name": "角色设定" },
+      "seed": { "name": "随机种子" },
+      "max_tokens": { "name": "最大长度" },
+      "temperature": { "name": "采样温度" },
+      "top_p": { "name": "核采样" },
+      "history": { "name": "对话历史" },
+      "input_file_text": { "name": "文本输入" },
+      "images": { "name": "图像输入", "tooltip": "用于视觉分析的图像连接" }
+    },
+    "outputs": {
+      "0": { "name": "文本回复" },
+      "1": { "name": "对话历史" }
+    }
+  },
+  "Pix_KimiApiNode": {
+    "display_name": "Kimi 助手 (Moonshot)",
+    "description": "连接月之暗面 Kimi API，支持超长上下文处理及深度思考",
+    "inputs": {
+      "api_key": { "name": "API 密钥" },
+      "base_url": { "name": "API 地址" },
+      "model": {
+        "name": "模型选择",
+        "options": {
+          "kimi-k2-0905-preview": "Kimi K2 (预览版)",
+          "kimi-k2-turbo-preview": "Kimi K2 Turbo (极速版)",
+          "kimi-k2-thinking": "Kimi K2 Thinking (深度思考)",
+          "moonshot-v1-8k-vision-preview": "Kimi Vision (8K 视觉)",
+          "moonshot-v1-32k-vision-preview": "Kimi Vision (32K 视觉)",
+          "moonshot-v1-128k-vision-preview": "Kimi Vision (128K 视觉)",
+          "moonshot-v1-8k": "Kimi V1 (8K 文本)",
+          "moonshot-v1-32k": "Kimi V1 (32K 文本)",
+          "moonshot-v1-128k": "Kimi V1 (128K 文本)"
+        }
+      },
+      "prompt": { "name": "提示词" },
+      "system_instruction": { "name": "角色设定" },
+      "seed": { "name": "种子" },
+      "max_tokens": { "name": "最大长度" },
+      "temperature": { "name": "采样温度" },
+      "top_p": { "name": "核采样" },
+      "history": { "name": "对话历史" },
+      "input_file_text": { "name": "文本输入" },
+      "images": { "name": "图像输入" }
+    },
+    "outputs": {
+      "0": { "name": "文本回复" },
+      "1": { "name": "对话历史" }
+    }
+  },
+  "Pix_QwenApiNode": {
+    "display_name": "通义千问 (Qwen)",
+    "description": "连接阿里通义千问 API，支持全量旗舰模型、视觉解析 (VL) 及 OCR 文字识别",
+    "inputs": {
+      "api_key": { "name": "API 密钥" },
+      "base_url": { "name": "API 地址" },
+      "model": {
+        "name": "模型选择",
+        "options": {
+          "qwen-max": "通义千问-Max (旗舰)",
+          "qwen-plus": "通义千问-Plus (推荐)",
+          "qwen-flash": "通义千问-Flash (极速)",
+          "qwen-vl-max": "通义千问-VL Max (视觉增强)",
+          "qwen-vl-plus": "通义千问-VL Plus (视觉通用)",
+          "qwen-vl-ocr": "通义千问-VL OCR (文字识别)"
+        }
+      },
+      "prompt": { "name": "提示词" },
+      "system_instruction": { "name": "人设指令" },
+      "seed": { "name": "随机种子" },
+      "max_tokens": { "name": "最大长度" },
+      "temperature": { "name": "采样温度" },
+      "top_p": { "name": "核采样" },
+      "history": { "name": "对话历史" },
+      "input_file_text": { "name": "文本输入" },
+      "images": { "name": "图像输入" }
+    },
+    "outputs": {
+      "0": { "name": "文本回复" },
+      "1": { "name": "对话历史" }
+    }
+  },
+    "Pix_BaiduTranslateNode": {
+    "display_name": "百度翻译 (Baidu)",
+    "description": "调用百度翻译开放平台 API 接口，实现多语言自动检测与翻译功能。支持 AppID 和 AppKey 的持久化保存。",
+    "inputs": {
+      "appid": {
+        "name": "AppID",
+        "tooltip": "百度翻译开放平台的 AppID，填入后自动保存至 api_key.json"
+      },
+      "appkey": {
+        "name": "密钥 (AppKey)",
+        "tooltip": "百度翻译开放平台的密钥，填入后自动保存至 api_key.json"
+      },
+      "from_language": {
+        "name": "源语言",
+        "tooltip": "待翻译文本的原始语言类型，建议使用自动检测"
+      },
+      "to_language": {
+        "name": "目标语言",
+        "tooltip": "希望将文本翻译成的目标语言"
+      },
+      "text": {
+        "name": "待翻译文本",
+        "tooltip": "输入需要处理的文字内容，支持多行输入"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "翻译结果",
+        "tooltip": "经过百度 API 处理后的译文输出"
+      }
+    }
+  },
+  "Pix_ChatGLM4Translate": {
+    "display_name": "ChatGLM4 翻译 (智谱)",
+    "description": "调用智谱 AI GLM-4 大模型接口，提供高质量、具语境理解能力的文本翻译服务",
+    "inputs": {
+      "api_key": {
+        "name": "API 密钥",
+        "tooltip": "智谱 AI 密钥。填入后自动保存至 api_key.json"
+      },
+      "model": {
+        "name": "模型版本",
+        "tooltip": "建议选择 glm-4-flash 以获得最快响应速度",
+        "options": {
+          "glm-4-flash": "GLM-4 Flash (推荐)",
+          "glm-4-flash-250414": "GLM-4 Flash (250414 版)"
+        }
+      },
+      "from_language": {
+        "name": "源语言",
+        "tooltip": "原始文本所属语言"
+      },
+      "to_language": {
+        "name": "目标语言",
+        "tooltip": "翻译后的目标语言"
+      },
+      "text": {
+        "name": "翻译文本",
+        "tooltip": "待翻译的文本内容"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "翻译结果",
+        "tooltip": "大模型处理后的翻译文本"
+      }
+    }
+  },
+    "Pix_ForLoopStart": {
+    "display_name": "For 循环开始 (Pix)",
+    "description": "循环结构的起点，指定循环次数。连接任意输入以创建动态插槽。",
+    "inputs": {
+      "total": {
+        "name": "循环次数",
+        "tooltip": "总共执行循环的次数 (1-100000)"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "流控制",
+        "tooltip": "连接到 For 循环结束节点"
+      },
+      "1": {
+        "name": "当前索引",
+        "tooltip": "当前循环的计数 (0, 1, 2...)"
+      }
+    }
+  },
+  "Pix_ForLoopEnd": {
+    "display_name": "For 循环结束 (Pix)",
+    "description": "循环结构的终点，收集单次迭代的结果并传回起点。",
+    "inputs": {
+      "flow": {
+        "name": "流控制",
+        "tooltip": "必须连接对应的循环开始节点"
+      }
+    }
+  },
+  "Pix_WhileLoopStart": {
+    "display_name": "While 循环开始 (Pix)",
+    "description": "条件循环的起点，只要条件为真就持续执行。",
+    "inputs": {
+      "condition": {
+        "name": "初始条件",
+        "tooltip": "是否启动循环 (True/False)"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "流控制",
+        "tooltip": "连接到 While 循环结束节点"
+      }
+    }
+  },
+  "Pix_WhileLoopEnd": {
+    "display_name": "While 循环结束 (Pix)",
+    "description": "条件循环的终点，通过布尔条件决定是否继续。",
+    "inputs": {
+      "flow": {
+        "name": "流控制",
+        "tooltip": "来自 While 循环开始节点"
+      },
+      "condition": {
+        "name": "继续条件",
+        "tooltip": "True: 继续循环; False: 结束循环并输出结果"
+      }
+    }
+  },
+    "Pix_CreateEmptyList": {
+    "display_name": "创建空列表",
+    "description": "初始化一个空的列表容器，常用于循环累加或数据收集的起点",
+    "inputs": {},
+    "outputs": {
+      "0": {
+        "name": "列表",
+        "tooltip": "一个初始化的空 Python 列表 []"
+      }
+    }
+  }
+}

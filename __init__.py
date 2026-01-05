@@ -28,4 +28,5 @@ def load_nodes():
     return node_mappings, display_mappings
 
 NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS = load_nodes()
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]  # ✅ 保持精简
+WEB_DIRECTORY = "./web" # 指向包含 js 的 web 文件夹
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
