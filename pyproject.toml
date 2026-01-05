@@ -28,7 +28,7 @@ Documentation = "https://github.com/pixixai/Comfyui-PixNodes/wiki"
 "Bug Tracker" = "https://github.com/pixixai/Comfyui-PixNodes/issues"
 
 [tool.comfy]
-PublisherId = ""
+PublisherId = "pixixai"
 DisplayName = "Comfyui-PixNodes"
 Icon = ""
 includes = [] 
