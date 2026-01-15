@@ -31,7 +31,7 @@ class LoadTextFromFolder:
     RETURN_TYPES = ("STRING", "STRING", "INT", "INT")
     RETURN_NAMES = ("content", "file_name", "index", "total_files")
     FUNCTION = "load_text"
-    CATEGORY = "PixNodes"
+    CATEGORY = "PixNodes/text"
 
     def check_lazy_status(self, directory, start_index):
         return ["directory", "start_index"]

@@ -23,7 +23,7 @@ class IfElseDispatcher:
     RETURN_TYPES = (any_type, any_type)
     RETURN_NAMES = ("true_branch", "false_branch")
     FUNCTION = "dispatch"
-    CATEGORY = "PixNodes"
+    CATEGORY = "PixNodes/Logic"
 
     def dispatch(self, any_value, if_true):
         if if_true:

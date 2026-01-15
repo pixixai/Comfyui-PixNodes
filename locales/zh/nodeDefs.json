@@ -1,4 +1,129 @@
 {
+  "Pix_GetVideoFromVideoList": {
+    "display_name": "从视频列表获取视频 (PixNodes)",
+    "description": "从输入的视频列表(VIDEO对象)中，根据索引选择一个视频输出。",
+    "inputs": {
+      "video_list": {
+        "name": "视频列表",
+        "tooltip": "连接包含 VIDEO 对象的列表"
+      },
+      "index": {
+        "name": "索引",
+        "tooltip": "要选择的视频索引。会自动根据列表总数进行循环（取模）。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "视频",
+        "tooltip": "选中的视频对象"
+      },
+      "1": {
+        "name": "当前索引",
+        "tooltip": "实际使用的有效索引值"
+      },
+      "2": {
+        "name": "总数",
+        "tooltip": "列表中的视频总数"
+      }
+    }
+  },
+  "Pix_GetVideoFromPathList": {
+    "display_name": "从路径列表获取视频 (PixNodes)",
+    "description": "解析视频路径列表字符串，并根据索引输出 ComfyUI 官方格式的视频对象(VIDEO)，自带实时预览功能。",
+    "inputs": {
+      "video_paths_json": {
+        "name": "视频路径列表",
+        "tooltip": "输入包含视频路径的字符串。支持 JSON 数组、换行分隔或逗号分隔格式。"
+      },
+      "index": {
+        "name": "索引",
+        "tooltip": "要选择的视频索引。会自动根据列表总数进行循环（取模）。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "视频",
+        "tooltip": "ComfyUI 官方 Video 对象，可直接连接到 Get Video Components 等官方节点。"
+      },
+      "1": {
+        "name": "视频路径",
+        "tooltip": "选中视频的绝对路径字符串"
+      },
+      "2": {
+        "name": "文件名",
+        "tooltip": "视频的文件名（不含路径）"
+      },
+      "3": {
+        "name": "当前索引",
+        "tooltip": "实际使用的有效索引值（已取模）"
+      },
+      "4": {
+        "name": "总数",
+        "tooltip": "列表中有效视频路径的总数"
+      }
+    }
+  },
+  "Pix_CreateVideoList": {
+    "display_name": "创建视频列表 (PixNodes)",
+    "description": "一个可视化的视频素材管理节点。支持批量上传、排序和预览，并输出标准的 VIDEO 对象列表以支持自动批处理循环，同时提供 JSON 格式的路径列表。",
+    "inputs": {
+      "video_data": {
+        "name": "视频数据(隐藏)",
+        "tooltip": "由前端UI自动生成的视频元数据，请勿手动修改。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "视频列表",
+        "tooltip": "包含按顺序排列的所有视频对象的列表。连接到下游节点（如 Get Video Components）会自动触发 ComfyUI 的批处理循环。"
+      },
+      "1": {
+        "name": "视频路径(JSON)",
+        "tooltip": "包含所有视频绝对路径的 JSON 字符串。该输出在批处理循环中不会被拆分，每次循环都能获取完整的列表。"
+      }
+    }
+  },
+  "Pix_CreateImageBatch": {
+    "display_name": "创建图像批次 (PixNodes)",
+    "description": "一个可视化的批量图片处理节点，支持拖拽上传、排序以及统一尺寸裁剪。",
+    "inputs": {
+      "batch_width": {
+        "name": "批量宽度",
+        "tooltip": "所有输出图片的统一宽度"
+      },
+      "batch_height": {
+        "name": "批量高度",
+        "tooltip": "所有输出图片的统一高度"
+      },
+      "method": {
+        "name": "缩放模式",
+        "tooltip": "图片的缩放或裁剪方式",
+        "options": {
+          "fill": "填充 (裁剪)",
+          "fit": "适应 (留黑边)",
+          "stretch": "拉伸"
+        }
+      },
+      "bg_color": {
+        "name": "背景颜色",
+        "tooltip": "Fit 模式下的背景填充颜色 (Hex 或 RGB)"
+      },
+      "image_data": {
+        "name": "图像数据",
+        "tooltip": "内部存储的图像列表数据"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "图像批次",
+        "tooltip": "堆叠后的 [B,H,W,C] 张量"
+      },
+      "1": {
+        "name": "图像列表",
+        "tooltip": "包含原始 Tensor 的列表"
+      }
+    }
+  },
   "Pix_ImageSplitter": {
     "display_name": "图像切分 (Pix)",
     "description": "将输入的图像按指定的行列平均切分，并输出为图像批次。",
@@ -44,29 +169,47 @@
     }
   },
   "Pix_ColorPicker": {
-    "display_name": "拾色器",
-    "description": "支持 RGB、HSV 和 HEX 模式转换的颜色选择节点",
+    "display_name": "拾色器 (PixNodes)",
+    "description": "一个支持 RGB/HSV 双向模式、屏幕吸管和动态单接口输出的高级拾色器节点。",
     "inputs": {
-      "color_mode": {
-        "name": "颜色模式",
-        "tooltip": "选择输入颜色的表达方式",
+      "mode": {
+        "name": "输入模式 (Mode)",
+        "tooltip": "选择输入数据的解释方式：RGB (红绿蓝) 或 HSV (色相/饱和度/明度)。",
         "options": {
-          "RGB": "RGB 模式 (0-255)",
-          "HSV": "HSV 模式 (色相/饱和度/明度)",
-          "HEX": "HEX 模式 (16进制)"
+          "RGB": "RGB 模式",
+          "HSV": "HSV 模式"
         }
       },
-      "value": {
-        "name": "颜色值",
-        "tooltip": "根据所选模式输入的具体颜色数值"
+      "output_format": {
+        "name": "输出格式",
+        "tooltip": "选择输出端口的数据类型。注意：切换此选项会改变输出端口的类型。",
+        "options": {
+          "Image (Tensor)": "图像 (Image Tensor)",
+          "RGB (List)": "RGB 列表",
+          "HSV (List)": "HSV 列表",
+          "Hex (String)": "Hex 颜色码",
+          "Decimal (Int)": "十进制数值",
+          "Brightness (Float)": "明度 (0-1)"
+        }
+      },
+      "red": {
+        "name": "红色 / 色相 (R/H)",
+        "tooltip": "在 RGB 模式下代表红色通道 (0-255)；在 HSV 模式下代表色相 Hue (0-360)。"
+      },
+      "green": {
+        "name": "绿色 / 饱和度 (G/S)",
+        "tooltip": "在 RGB 模式下代表绿色通道 (0-255)；在 HSV 模式下代表饱和度 Saturation (0-100)。"
+      },
+      "blue": {
+        "name": "蓝色 / 明度 (B/V)",
+        "tooltip": "在 RGB 模式下代表蓝色通道 (0-255)；在 HSV 模式下代表明度 Value (0-100)。"
       }
     },
     "outputs": {
-      "0": { "name": "RGB 色值", "tooltip": "输出格式为 'R,G,B' 的字符串" },
-      "1": { "name": "RGB 整数", "tooltip": "输出 RGB 颜色的整数值" },
-      "2": { "name": "HSV 色值", "tooltip": "输出格式为 'H,S,V' 的字符串" },
-      "3": { "name": "HEX 值", "tooltip": "输出带 # 号的 16 进制颜色码" },
-      "4": { "name": "HEX 值 (纯净版)", "tooltip": "输出不带 # 号的 16 进制颜色码" }
+      "0": {
+        "name": "动态输出",
+        "tooltip": "根据“输出格式”的选择，输出 Image, List, String, Int 或 Float 类型的数据。"
+      }
     }
   },
   "Pix_IfElseDispatcher": {
@@ -138,26 +281,104 @@
       "0": { "name": "运算结果", "tooltip": "输出计算后的整数值" }
     }
   },
-    "Pix_ListToImageBatch": {
-    "display_name": "图像列表转图像批次",
-    "description": "将收集到的图像列表合并为标准 Tensor 批次",
+  "Pix_ImageListToBatch": {
+    "display_name": "图像列表转批次",
+    "description": "将图像列表合并为统一尺寸的标准批次，支持适应、填充、拉伸模式及位置对齐",
     "inputs": {
-      "image_list": { "name": "图像列表" }
+      "image_list": {
+        "name": "图像列表",
+        "tooltip": "连接待合并的图像或图像列表"
+      },
+      "mode": {
+        "name": "缩放模式",
+        "tooltip": "决定图像如何适应目标尺寸",
+        "options": {
+          "Fit": "适应 (全部显示)",
+          "Fill": "填充 (裁切填满)",
+          "Stretch": "拉伸 (强制变形)"
+        }
+      },
+      "alignment": {
+        "name": "定位对齐",
+        "tooltip": "设置图像在画布中的对齐位置",
+        "options": {
+          "Top Left": "左上",
+          "Top": "上",
+          "Top Right": "右上",
+          "Left": "左",
+          "Center": "中心",
+          "Right": "右",
+          "Bottom Left": "左下",
+          "Bottom": "下",
+          "Bottom Right": "右下"
+        }
+      },
+      "size": {
+        "name": "目标尺寸",
+        "tooltip": "输出的分辨率 (宽,高)。留空则跟随首图尺寸"
+      },
+      "background_color": {
+        "name": "背景颜色",
+        "tooltip": "适应模式下的空白区域颜色 (RGB或Hex)"
+      }
     },
     "outputs": {
-      "0": { "name": "图像批次" }
+      "0": {
+        "name": "图像批次",
+        "tooltip": "处理完成的合并批次"
+      }
+    }
+  },
+  "Pix_UniversalUnicodeDecoder": {
+    "display_name": "通用 Unicode 解码器",
+    "description": "递归解码嵌套结构中的 Unicode 编码，并还原换行、制表符等控制字符",
+    "inputs": {
+      "input_data": {
+        "name": "输入数据",
+        "tooltip": "接收待解码的原始数据，支持字符串、列表或字典嵌套"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "解码文本",
+        "tooltip": "已还原中文及排版符号的标准字符串"
+      }
     }
   },
   "Pix_ListFromLoop": {
-    "display_name": "从循环创建列表",
-    "description": "在循环执行过程中逐轮收集数据并累积成列表",
+    "display_name": "从循环获取列表",
+    "description": "在循环中收集并累加数据项，支持图像批次的自动拆解",
     "inputs": {
-      "item": { "name": "当前项", "tooltip": "本轮循环产生的新数据" },
-      "list_in": { "name": "累积列表 (可选)", "tooltip": "连接来自上一轮循环输出的列表信号" }
+      "list_in": {
+        "name": "输入列表",
+        "tooltip": "连接来自循环起始节点的累加链条"
+      },
+      "item": {
+        "name": "当前项",
+        "tooltip": "本轮迭代需要存入的新数据"
+      },
+      "split_items": {
+        "name": "拆分批次",
+        "tooltip": "开启时：将 Batch 图像拆解为单图存入；关闭时：作为整体存入",
+        "options": {
+          "true": "拆分批次 (Split)",
+          "false": "保持整体 (Keep)"
+        }
+      },
+      "reset_debug": {
+        "name": "手动调试重置",
+        "tooltip": "警告：勾选此项将立即清空当前累加的所有数据"
+      }
     },
     "outputs": {
-      "0": { "name": "列表" },
-      "1": { "name": "列表数量" }
+      "0": {
+        "name": "列表结果",
+        "tooltip": "已收集所有数据的 Python 列表"
+      },
+      "1": {
+        "name": "元素计数",
+        "tooltip": "当前列表中的元素总数"
+      }
     }
   },
   "Pix_LoadTextFromFolderNode": {
@@ -440,6 +661,26 @@
       "0": {
         "name": "列表",
         "tooltip": "一个初始化的空 Python 列表 []"
+      }
+    }
+  },
+  "Pix_ImageCropEdge": {
+    "display_name": "图像裁边",
+    "description": "通过指定像素值来裁剪图像的四个边缘内容。",
+    "inputs": {
+      "image": {
+        "name": "图像",
+        "tooltip": "待处理的输入图像或批量图像"
+      },
+      "crop_size": {
+        "name": "裁剪大小",
+        "tooltip": "指定裁剪像素。单值：四周统一；多值(上,下,左,右)：分别指定每一边。例如: 10 或 10,20,0,0"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "裁剪后图像",
+        "tooltip": "处理完成后的结果图像"
       }
     }
   }

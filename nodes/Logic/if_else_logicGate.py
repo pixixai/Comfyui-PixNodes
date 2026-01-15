@@ -23,7 +23,7 @@ class IfElseLogicGate:
     RETURN_TYPES = (any_type,)
     RETURN_NAMES = ("output",)
     FUNCTION = "pick_valid"
-    CATEGORY = "PixNodes"
+    CATEGORY = "PixNodes/Logic"
 
     def pick_valid(self, true_path, false_path):
         # 逻辑：如果 true_path 被阻塞，则尝试返回 false_path

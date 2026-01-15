@@ -1,103 +1,108 @@
+import torch
 import colorsys
+
+# --- 核心修复 ---
+class AnyType(str):
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+ANY = AnyType("*")
+# ----------------
 
 class ColorPicker:
     """
-    颜色选择与转换节点 - PixNodes 系列
-    支持RGB、HSV和HEX三种颜色模式的输入，并输出多种颜色格式
+    PixNodes 自定义拾色器节点
+    支持 RGB/HSV 模式，单接口动态多格式输出
     """
     def __init__(self):
         pass
 
     @classmethod
     def INPUT_TYPES(s):
-        """
-        定义输入参数
-        """
         return {
             "required": {
-                "color_mode": (["RGB", "HSV", "HEX"], {
-                    "default": "RGB"  # 默认颜色模式为RGB
-                }),
-                "value": ("STRING", {
-                    "multiline": False,  # 单行输入框
-                    "default": "111,222,333",  # 默认RGB值
-                    "dynamicPrompts": False  # 禁用动态提示
-                }),
+                "mode": (["RGB", "HSV"], {"default": "RGB"}), 
+                # 增加了 "Brightness (Float)"
+                "output_format": ([
+                    "RGB (List)", 
+                    "HSV (List)", 
+                    "Hex (String)", 
+                    "Decimal (Int)",
+                    "Image (Tensor)",
+                    "Brightness (Float)"
+                ], {"default": "RGB (List)"}),
+                "red": ("INT", {"default": 255, "min": 0, "max": 360, "step": 1, "display": "number"}),
+                "green": ("INT", {"default": 255, "min": 0, "max": 360, "step": 1, "display": "number"}),
+                "blue": ("INT", {"default": 255, "min": 0, "max": 360, "step": 1, "display": "number"}),
             },
         }
 
-    # 定义输出类型（5种输出）
-    RETURN_TYPES = ("STRING", "INT", "STRING", "STRING", "STRING")
-    # 定义输出名称
-    RETURN_NAMES = ("RGB", "RGB_INT", "HSV", "HEX", "HEX_NO_HASH")
+    RETURN_TYPES = (ANY,)
+    # 改为通用名称，实际显示名称由前端 JS 动态修改
+    RETURN_NAMES = ("Output",)
     
-    # 入口函数名
-    FUNCTION = "convert_color"
-    # 节点分类
+    FUNCTION = "get_color"
     CATEGORY = "PixNodes"
 
-    def convert_color(self, color_mode, value):
-        """
-        颜色转换主函数
-        """
-        # 初始化默认颜色值(RGB)
-        r, g, b = 111, 222, 333
-        
-        try:
-            if color_mode == "RGB":
-                # 解析RGB输入(格式:"R,G,B")
-                rgb_values = [int(x.strip()) for x in value.split(",")]
-                if len(rgb_values) == 3:
-                    r, g, b = rgb_values
-                else:
-                    raise ValueError("RGB输入应为逗号分隔的3个数值")
-                    
-            elif color_mode == "HSV":
-                # 解析HSV输入(格式:"H,S,V")
-                hsv_values = [float(x.strip()) for x in value.split(",")]
-                if len(hsv_values) == 3:
-                    h, s, v = hsv_values
-                    # 将HSV转换为RGB(范围:0-1)
-                    r, g, b = [int(x * 255) for x in colorsys.hsv_to_rgb(h/360.0, s/100.0, v/100.0)]
-                else:
-                    raise ValueError("HSV输入应为逗号分隔的3个数值")
-                    
-            elif color_mode == "HEX":
-                # 解析HEX输入(格式:"#RRGGBB"或"RRGGBB")
-                hex_value = value.strip().lstrip('#')
-                if len(hex_value) == 6:
-                    # 将16进制转换为10进制
-                    r = int(hex_value[0:2], 16)
-                    g = int(hex_value[2:4], 16)
-                    b = int(hex_value[4:6], 16)
-                else:
-                    raise ValueError("HEX输入应为6个字符")
-        
-        except Exception as e:
-            print(f"颜色值解析错误: {e}")
-            r, g, b = 111, 222, 333  # 使用默认值
-        
-        # 确保RGB值在0-255范围内
-        r = max(0, min(255, r))
-        g = max(0, min(255, g))
-        b = max(0, min(255, b))
-        
-        # 准备输出结果
-        rgb_str = f"{r},{g},{b}"
-        rgb_int = (r << 16) | (g << 8) | b
-        h, s, v = colorsys.rgb_to_hsv(r/255.0, g/255.0, b/255.0)
-        hsv_str = f"{round(h*360,1)},{round(s*100,1)},{round(v*100,1)}"
-        hex_str = f"#{r:02x}{g:02x}{b:02x}".upper()
-        hex_no_hash = f"{r:02x}{g:02x}{b:02x}".upper()
-        
-        return (rgb_str, rgb_int, hsv_str, hex_str, hex_no_hash)
+    def get_color(self, mode, output_format, red, green, blue):
+        # 1. 统一归一化处理，计算 H, S, V (0.0 - 1.0) 和 RGB (0-255)
+        h, s, v = 0.0, 0.0, 0.0
+        r_int, g_int, b_int = 0, 0, 0
+        r_norm, g_norm, b_norm = 0.0, 0.0, 0.0
 
-# 节点类映射
+        if mode == "HSV":
+            # HSV 输入归一化
+            h = max(0.0, min(1.0, red / 360.0))
+            s = max(0.0, min(1.0, green / 100.0))
+            v = max(0.0, min(1.0, blue / 100.0))
+
+            # 转 RGB
+            r_norm, g_norm, b_norm = colorsys.hsv_to_rgb(h, s, v)
+            r_int, g_int, b_int = int(r_norm * 255), int(g_norm * 255), int(b_norm * 255)
+            
+        else:
+            # RGB 输入
+            r_int = min(255, red)
+            g_int = min(255, green)
+            b_int = min(255, blue)
+            
+            r_norm = r_int / 255.0
+            g_norm = g_int / 255.0
+            b_norm = b_int / 255.0
+
+            # 转 HSV
+            h, s, v = colorsys.rgb_to_hsv(r_norm, g_norm, b_norm)
+
+        # 2. 根据格式输出
+        if output_format == "Image (Tensor)":
+            # [1, 1, 1, 3]
+            tensor_rgb = torch.tensor([r_norm, g_norm, b_norm], dtype=torch.float32)
+            image_tensor = tensor_rgb.reshape(1, 1, 1, 3)
+            return (image_tensor,)
+
+        elif output_format == "RGB (List)":
+            return ([r_int, g_int, b_int],)
+            
+        elif output_format == "HSV (List)":
+            # 输出标准单位: H(0-360), S(0-100), V(0-100)
+            return ([round(h * 360.0, 2), round(s * 100.0, 2), round(v * 100.0, 2)],)
+            
+        elif output_format == "Decimal (Int)":
+            decimal_val = (r_int << 16) | (g_int << 8) | b_int
+            return (decimal_val,)
+
+        elif output_format == "Brightness (Float)":
+            # 直接输出 V (0.0 - 1.0)
+            return (float(v),)
+            
+        else: # Hex (String)
+            hex_str = "#{:02X}{:02X}{:02X}".format(r_int, g_int, b_int)
+            return (hex_str,)
+
 NODE_CLASS_MAPPINGS = {
     "Pix_ColorPicker": ColorPicker
 }
 
-# 节点显示名称映射
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Pix_ColorPicker": "Color Picker (PixNodes)"
 }
