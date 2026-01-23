@@ -4,32 +4,35 @@ import re
 import colorsys
 import ast
 
-class ImageListToBatch:
+class ImageBatchCompose:
     """
-    Advanced Image List to Batch:
-    Normalize a list of images (potentially different sizes) into a single batch tensor.
-    Supports resizing (Fit/Fill/Stretch), alignment, and background padding.
+    PixNodes: Image Batch Compose
+    Combines dynamic image inputs into a single batch with resizing and alignment.
+    Merges functionality of ToImageBatch and ImageListToBatch.
     """
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image_list": ("IMAGE", {"forceInput": True}), # 强制输入必须连接
                 "mode": (["Fit", "Fill", "Stretch"], {"default": "Fill"}),
                 "alignment": (["Top Left", "Top", "Top Right", "Left", "Center", "Right", "Bottom Left", "Bottom", "Bottom Right"], {"default": "Center"}),
-                # 按照要求，保持为 STRING 类型，支持多种输入格式
+                # 仅保留参数输入，与【图像列表转批次】一致
                 "background_color": ("STRING", {"default": "#FFFFFF", "multiline": False, "dynamicPrompts": False}),
-                "size": ("STRING", {"default": "", "multiline": False, "placeholder": "512x512 or empty for first image size"}),
+                "size": ("STRING", {"default": "", "multiline": False, "placeholder": "Width x Height (e.g. 512x512) or empty"}),
             },
+            "optional": {
+                # 动态输入起点
+                "image_1": ("IMAGE",),
+            }
         }
 
-    INPUT_IS_LIST = True
-    
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image_batch",)
-    FUNCTION = "convert"
+    FUNCTION = "compose"
     CATEGORY = "PixNodes"
+
+    # ---------------- 核心颜色解析函数 (与 ImageListToBatch 完全一致) ----------------
 
     def parse_color(self, color_input):
         """
@@ -212,18 +215,16 @@ class ImageListToBatch:
                 val = int(nums[0])
                 return val, val 
             elif len(nums) >= 2:
-                w = int(nums[0])
-                h = int(nums[1])
-                return h, w 
+                w, h = int(nums[0]), int(nums[1])
+                return h, w # 返回 target_h, target_w
         except Exception:
             pass
         return fallback_size
 
     def calculate_alignment(self, align_type, diff_w, diff_h):
         diff_w, diff_h = max(0, diff_w), max(0, diff_h)
-        x_offset = diff_w // 2
-        y_offset = diff_h // 2
-
+        x_offset, y_offset = diff_w // 2, diff_h // 2
+        
         if "Left" in align_type: x_offset = 0
         elif "Right" in align_type: x_offset = diff_w
         
@@ -232,53 +233,51 @@ class ImageListToBatch:
             
         return x_offset, y_offset
 
-    def convert(self, image_list, mode, alignment, background_color, size):
-        if isinstance(mode, list): mode = mode[0]
-        if isinstance(alignment, list): alignment = alignment[0]
-        if isinstance(size, list): size = size[0]
+    # ---------------- 主执行逻辑 ----------------
+
+    def compose(self, mode, alignment, background_color, size, **kwargs):
+        # 1. 动态收集图像输入
+        images = []
+        image_keys = [k for k in kwargs.keys() if k.startswith("image_")]
+        sorted_keys = sorted(image_keys, key=lambda x: int(x.split('_')[1]))
         
-        # 处理 background_color
-        bg_input = None
-        if isinstance(background_color, list) and len(background_color) > 0:
-            bg_input = background_color[0]
-        elif background_color is not None:
-            bg_input = background_color
+        for key in sorted_keys:
+            img = kwargs[key]
+            if img is not None:
+                images.append(img)
+        
+        # 没有任何输入时的防御
+        if not images:
+            return (torch.zeros([1, 64, 64, 3]),)
+
+        # 2. 解析背景色 (仅使用参数 background_color)
+        bg_rgb = self.parse_color(background_color)
+
+        # 3. 预处理：确保所有输入都是 [B, H, W, 3] 格式
+        processed_input_list = []
+        for item in images:
+            # 处理通道
+            if item.shape[-1] == 1: item = item.repeat(1, 1, 1, 3)
+            elif item.shape[-1] == 4: item = item[:, :, :, :3]
             
-        bg_rgb = self.parse_color(bg_input)
-        
-        if not image_list:
-            return (torch.zeros([1, 64, 64, 3]),)
+            # 确保维度 [B, H, W, C]
+            if item.ndim == 3: item = item.unsqueeze(0)
+            
+            processed_input_list.append(item)
 
-        raw_images = []
-        for item in image_list:
-            if isinstance(item, torch.Tensor):
-                # 处理通道
-                if item.shape[-1] == 1: # Mask -> RGB
-                    item = item.repeat(1, 1, 1, 3) if item.ndim == 4 else item.unsqueeze(-1).repeat(1, 1, 1, 3)
-                elif item.shape[-1] == 4: # RGBA -> RGB (丢弃 Alpha)
-                    item = item[:, :, :, :3]
-                elif item.shape[-1] != 3: # 异常通道处理
-                     item = item[:, :, :, :3]
-
-                if item.ndim == 3:
-                    raw_images.append(item.unsqueeze(0))
-                elif item.ndim == 4:
-                    raw_images.append(item)
-
-        if not raw_images:
-            return (torch.zeros([1, 64, 64, 3]),)
-
-        first_img_h, first_img_w = raw_images[0].shape[1], raw_images[0].shape[2]
+        # 4. 确定目标尺寸
+        first_img_h, first_img_w = processed_input_list[0].shape[1], processed_input_list[0].shape[2]
         target_h, target_w = self.parse_size(size, (first_img_h, first_img_w))
-        
-        processed_images = []
-        
-        for img_batch in raw_images:
+
+        final_frames = []
+
+        # 5. 循环处理每一张图 (Resize & Align)
+        for img_batch in processed_input_list:
             for i in range(img_batch.shape[0]):
                 img = img_batch[i:i+1] # [1, H, W, C]
                 curr_h, curr_w = img.shape[1], img.shape[2]
                 
-                img_chw = img.permute(0, 3, 1, 2) 
+                img_chw = img.permute(0, 3, 1, 2)
                 
                 if mode == "Stretch":
                     img_out = F.interpolate(img_chw, size=(target_h, target_w), mode='bilinear', align_corners=False)
@@ -291,10 +290,8 @@ class ImageListToBatch:
                     diff_w, diff_h = target_w - new_w, target_h - new_h
                     x_off, y_off = self.calculate_alignment(alignment, diff_w, diff_h)
                     
-                    # 修复: 直接使用 img.dtype 和 img.device
-                    bg_tensor = torch.tensor(bg_rgb, device=img.device, dtype=img.dtype).view(1, 3, 1, 1)
+                    bg_tensor = torch.tensor(bg_rgb, device=img.device, dtype=torch.float32).view(1, 3, 1, 1)
                     final_canvas = bg_tensor.expand(1, 3, target_h, target_w).clone()
-                    
                     final_canvas[:, :, y_off:y_off+new_h, x_off:x_off+new_w] = resized
                     img_out = final_canvas
                 
@@ -308,18 +305,19 @@ class ImageListToBatch:
                     
                     img_out = resized[:, :, y_off:y_off+target_h, x_off:x_off+target_w]
 
-                processed_images.append(img_out.permute(0, 2, 3, 1))
-        
-        if not processed_images:
-             return (torch.zeros([1, target_h, target_w, 3]),)
-             
-        final_batch = torch.cat(processed_images, dim=0)
+                final_frames.append(img_out.permute(0, 2, 3, 1))
+
+        # 6. 拼接输出
+        if not final_frames:
+            return (torch.zeros([1, target_h, target_w, 3]),)
+            
+        final_batch = torch.cat(final_frames, dim=0)
         return (final_batch,)
 
 NODE_CLASS_MAPPINGS = {
-    "Pix_ImageListToBatch": ImageListToBatch
+    "Pix_ImageBatchCompose": ImageBatchCompose
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Pix_ImageListToBatch": "Image List to Batch (PixNodes)"
+    "Pix_ImageBatchCompose": "Image Batch Compose (PixNodes)"
 }

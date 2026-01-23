@@ -1,7 +1,10 @@
 import torch
 import colorsys
 
-# --- 核心修复 ---
+# --- 核心修复：通用类型定义 ---
+# 这是一个总是返回 True 的类型，允许任何类型的连接
+# 这样不仅允许我们在 Python 端灵活返回不同类型，
+# 也配合前端 JS 动态修改端口类型时的验证机制。
 class AnyType(str):
     def __ne__(self, __value: object) -> bool:
         return False
@@ -22,7 +25,6 @@ class ColorPicker:
         return {
             "required": {
                 "mode": (["RGB", "HSV"], {"default": "RGB"}), 
-                # 增加了 "Brightness (Float)"
                 "output_format": ([
                     "RGB (List)", 
                     "HSV (List)", 
@@ -37,8 +39,9 @@ class ColorPicker:
             },
         }
 
+    # 返回类型设置为 ANY，实际的类型检查交由前端 JS 动态控制
     RETURN_TYPES = (ANY,)
-    # 改为通用名称，实际显示名称由前端 JS 动态修改
+    # 默认名称，会被 JS updateOutputSocketType 覆盖
     RETURN_NAMES = ("Output",)
     
     FUNCTION = "get_color"
@@ -75,7 +78,7 @@ class ColorPicker:
 
         # 2. 根据格式输出
         if output_format == "Image (Tensor)":
-            # [1, 1, 1, 3]
+            # 创建形状为 [B, H, W, C] 即 [1, 1, 1, 3] 的 Tensor
             tensor_rgb = torch.tensor([r_norm, g_norm, b_norm], dtype=torch.float32)
             image_tensor = tensor_rgb.reshape(1, 1, 1, 3)
             return (image_tensor,)
@@ -99,6 +102,7 @@ class ColorPicker:
             hex_str = "#{:02X}{:02X}{:02X}".format(r_int, g_int, b_int)
             return (hex_str,)
 
+# 导出映射，供 __init__.py 读取
 NODE_CLASS_MAPPINGS = {
     "Pix_ColorPicker": ColorPicker
 }

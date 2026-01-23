@@ -67,25 +67,20 @@ app.registerExtension({
                 this.undoStack = [];
                 this.redoStack = [];
                 
-                // --- Widget 初始化 ---
-                let dataWidget = this.widgets?.find(w => w.name === "video_data");
-                if (!dataWidget) {
-                    dataWidget = this.addWidget("text", "video_data", "[]", (v) => {});
-                }
-                if (dataWidget) {
-                    dataWidget.computeSize = () => [0, -4]; 
-                    dataWidget.draw = () => {}; 
-                    if (dataWidget.element) {
-                        dataWidget.element.style.display = "none";
+                // --- 核心 Widget: video_data ---
+                // 确保数据能被序列化保存
+                const dataWidget = {
+                    type: "custom_video_data",
+                    name: "video_data",
+                    value: "[]",
+                    draw: function(ctx, node, widget_width, y, widget_height) {},
+                    computeSize: function(width) { return [width, 0]; },
+                    // [关键] 必须允许序列化，否则刷新后数据丢失
+                    serializeValue(serializedNode, widgetIndex) {
+                        return this.value;
                     }
-                    // 恢复数据
-                    if (dataWidget.value && dataWidget.value !== "") {
-                        try {
-                            const parsed = JSON.parse(dataWidget.value);
-                            if (Array.isArray(parsed)) this.videos = parsed;
-                        } catch (e) {}
-                    }
-                }
+                };
+                this.addCustomWidget(dataWidget);
 
                 // --- 构建 DOM 容器 ---
                 const container = document.createElement("div");
@@ -333,6 +328,7 @@ app.registerExtension({
                 btnBigAdd.onclick = handleUploadClick;
                 btnAddSmall.onclick = handleUploadClick;
 
+                // --- 核心修改: 上传到指定子文件夹 ---
                 fileInput.onchange = async (e) => {
                     const files = Array.from(e.target.files);
                     if (!files.length) return;
@@ -346,7 +342,8 @@ app.registerExtension({
                     for (const file of files) {
                         const body = new FormData();
                         body.append("image", file); 
-                        body.append("subfolder", "");
+                        // [修改] 指定子文件夹
+                        body.append("subfolder", "PixNodes/CreateVideoList");
                         body.append("type", "input");
                         try {
                             const resp = await api.fetchApi("/upload/image", { method: "POST", body });
@@ -481,6 +478,7 @@ app.registerExtension({
                             });
 
                             const videoEl = document.createElement("video");
+                            // [提示] 使用 encodeURIComponent 确保路径安全
                             let src = `/view?filename=${encodeURIComponent(vid.filename)}&type=${vid.type}&subfolder=${encodeURIComponent(vid.subfolder)}`;
                             videoEl.src = src;
                             videoEl.muted = true;
@@ -714,7 +712,7 @@ app.registerExtension({
                 };
 
                 const updateNodeData = () => {
-                    const w = this.widgets?.find(w => w.name === "video_data");
+                    const w = this.widgets.find(w => w.name === "video_data");
                     if (w) {
                         w.value = JSON.stringify(this.videos);
                     }
@@ -726,12 +724,31 @@ app.registerExtension({
                     fileInput.remove();
                 };
                 
+                // --- 核心修改 2: 重写 configure 以实现数据恢复 ---
+                // 当 ComfyUI 加载工作流时，会调用此方法并传入 Widget 的保存值
+                const origConfigure = this.configure;
+                this.configure = function(info) {
+                    if (origConfigure) origConfigure.apply(this, arguments);
+                    
+                    // 尝试从 custom widget 中恢复数据
+                    const w = this.widgets.find(w => w.name === "video_data");
+                    if (w && w.value && w.value !== "[]" && typeof w.value === "string") {
+                        try {
+                            const loaded = JSON.parse(w.value);
+                            if (Array.isArray(loaded) && loaded.length > 0) {
+                                this.videos = loaded;
+                                updateState();
+                            }
+                        } catch (e) {
+                            console.error("Pix_CreateVideoList: Failed to restore videos", e);
+                        }
+                    }
+                };
+                
                 // [修复] 强制触发首次 Resize，确保容器有高度
-                // 同时在 setTimeout 中执行，等待 DOM 挂载
                 setTimeout(() => {
                     updateState();
                     updateNodeData();
-                    // 强制刷新一次尺寸
                     if (this.onResize) {
                         this.onResize(this.size);
                     }

@@ -20,6 +20,10 @@ class VideoList:
     def INPUT_TYPES(s):
         return {
             "required": {
+                # 原有的 video_data 已移动到 hidden，保持 required 为空或添加其他必要参数
+            },
+            "hidden": {
+                # [修改] 移动到 hidden，专门用于接收前端 JSON
                 "video_data": ("STRING", {"default": "[]"}),
             },
         }
@@ -27,7 +31,7 @@ class VideoList:
     # 输出 VIDEO 类型 (如果支持)
     RETURN_TYPES = (("VIDEO", "STRING") if HAS_COMFY_API else ("STRING", "STRING"))
     
-    # [修改] 输出名称更改为 video_list
+    # 输出名称
     RETURN_NAMES = ("video_list", "video_paths_json")
     
     # 开启批处理，自动拆分列表
@@ -50,12 +54,27 @@ class VideoList:
             subfolder = vid_info.get("subfolder", "")
             if subfolder == "": subfolder = None
             
-            video_path = folder_paths.get_annotated_filepath(filename, subfolder)
+            # [核心修复]：组合子文件夹路径
+            # 确保能读取 input/PixNodes/CreateVideoList/ 下的文件
+            if subfolder:
+                full_path_check = os.path.join(subfolder, filename)
+            else:
+                full_path_check = filename
+                
+            # 优先使用 ComfyUI 的标准路径解析
+            video_path = folder_paths.get_annotated_filepath(full_path_check)
             
+            # 兜底：如果 get_annotated_filepath 没找到，尝试手动检查
+            if video_path is None or not os.path.exists(video_path):
+                input_dir = folder_paths.get_input_directory()
+                manual_path = os.path.join(input_dir, full_path_check)
+                if os.path.exists(manual_path):
+                    video_path = manual_path
+
             if video_path and os.path.exists(video_path):
                 path_list.append(video_path)
             else:
-                print(f"[PixNodes] Warning: Video file not found: {filename}")
+                print(f"[PixNodes] Warning: Video file not found: {filename} (Subfolder: {subfolder})")
 
         print(f"--- [PixNodes Debug] ---")
         print(f"Processing {len(path_list)} videos.")

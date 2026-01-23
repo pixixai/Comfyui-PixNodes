@@ -337,7 +337,7 @@ app.registerExtension({
 
                 if (format === "Image (Tensor)") {
                     newType = "IMAGE";
-                    newLabel = "Image"; // 修改为首字母大写
+                    newLabel = "Image";
                 } else if (format === "RGB (List)") {
                     newType = "LIST"; 
                     newLabel = "RGB";
@@ -346,16 +346,17 @@ app.registerExtension({
                     newLabel = "HSV";
                 } else if (format === "Hex (String)") {
                     newType = "STRING";
-                    newLabel = "Hex"; // 修改为首字母大写
+                    newLabel = "Hex";
                 } else if (format === "Decimal (Int)") {
                     newType = "INT";
-                    newLabel = "Decimal"; // 修改为显示 Decimal
+                    newLabel = "Decimal";
                 } else if (format === "Brightness (Float)") {
                     newType = "FLOAT";
                     newLabel = "Brightness";
                 }
 
                 // 同时更新 name 和 label，确保 UI 刷新
+                // 只有在真的改变时才触发更新，避免死循环
                 if (node.outputs[0].type !== newType || node.outputs[0].name !== newLabel) {
                     node.outputs[0].type = newType;
                     node.outputs[0].name = newLabel;
@@ -561,8 +562,17 @@ app.registerExtension({
                 } catch (err) {}
             };
 
-            // 初始化
+            // 初始化 (针对拖入创建节点)
             syncUIFromWidgets();
+
+            // --- 5. 修复：添加 onConfigure 钩子 (针对网页刷新/加载工作流) ---
+            const onConfigure = node.onConfigure;
+            node.onConfigure = function () {
+                if (onConfigure) onConfigure.apply(this, arguments);
+                // 此时 widget.value 已经由系统恢复为保存的值
+                // 强制触发一次 UI 同步，从而正确设置输出端口类型
+                syncUIFromWidgets();
+            };
 
             this.addDOMWidget("pix_color_picker_responsive", "ui", container);
             return r;

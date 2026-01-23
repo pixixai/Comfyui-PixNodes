@@ -1,4 +1,282 @@
 {
+  "Pix_JsonObjectCombine": {
+    "display_name": "合并为JSON对象 (PixNodes)",
+    "description": "动态接收任意输入，支持智能解构合并对象或普通键值对赋值。",
+    "inputs": {
+      "merge_keys": {
+        "name": "合并键列表",
+        "tooltip": "在此定义端口名称，每行一个。\n1. 智能合并：如果输入是对象/字典，会自动解构合并到结果中（忽略此处的端口名）。\n2. 普通赋值：如果输入是普通值，则使用此处的端口名作为Key。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "JSON字符串",
+        "tooltip": "序列化后的JSON字符串，非标准对象会转为描述性文本。"
+      },
+      "1": {
+        "name": "JSON对象",
+        "tooltip": "原始Python字典对象，保留数据原始类型。"
+      }
+    }
+  },
+  "Pix_JsonObjectJoin": {
+    "display_name": "连接到 JSON 对象 (PixNodes)",
+    "description": "将多个动态输入合并为一个 JSON 对象 (字典)。支持智能解析字符串和扁平化合并字典。",
+    "inputs": {
+      "AnyData_1": {
+        "name": "AnyData_1",
+        "tooltip": "动态输入端口。如果是字典则合并内容，否则以端口名作为Key。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "JSON字符串",
+        "tooltip": "格式化后的 JSON 字符串"
+      },
+      "1": {
+        "name": "JSON对象",
+        "tooltip": "合并后的 Python 字典对象"
+      }
+    }
+  },
+  "Pix_JsonListJoin": {
+    "display_name": "连接到 JSON 列表 (PixNodes)",
+    "description": "将多个动态输入合并为一个 JSON 列表。支持智能解析输入字符串，避免二次转义导致的格式混乱。",
+    "inputs": {
+      "AnyData_1": {
+        "name": "AnyData_1",
+        "tooltip": "动态输入端口，连接后会自动增加后续端口"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "JSON 字符串",
+        "tooltip": "格式化后的 JSON 字符串，包含缩进和换行，方便阅读"
+      },
+      "1": {
+        "name": "JSON 列表",
+        "tooltip": "Python 原生列表对象，包含所有合并后的数据"
+      }
+    }
+  },
+  "Pix_CreateJsonList": {
+    "display_name": "创建 JSON 列表 (PixNodes)",
+    "description": "提供一个可视化的有序列表编辑界面，支持拖拽排序、多选和多种数据类型，可输出 JSON 字符串和 Python 列表对象。",
+    "inputs": {
+      "json_data": {
+        "name": "列表数据",
+        "tooltip": "存储列表编辑器状态的内部数据"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "JSON字符串",
+        "tooltip": "格式化后的 JSON 数组字符串"
+      },
+      "1": {
+        "name": "JSON 列表",
+        "tooltip": "Python 原生列表对象 (List)"
+      }
+    }
+  },
+  "Pix_CreateJsonObject": {
+    "display_name": "创建 JSON 对象 (PixNodes)",
+    "description": "提供一个类似 Notion 的交互式编辑器，用于创建、排序和管理 JSON 键值对数据。",
+    "inputs": {
+      "json_data": {
+        "name": "JSON数据(内部)",
+        "tooltip": "存储编辑器状态的隐藏数据，请勿手动修改"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "JSON 字符串",
+        "tooltip": "格式化后的 JSON 文本 (String)，支持中文显示，适合阅读或保存为文件"
+      },
+      "1": {
+        "name": "JSON 对象",
+        "tooltip": "原生 Python 字典对象 (Dict)，用于节点间的数据传递和处理"
+      }
+    }
+  },
+  "Pix_JsonUnpacker": {
+    "display_name": "JSON 解包 (PixNodes)",
+    "description": "将 JSON 数据递归展平为纯文本，支持自动修复截断的 JSON 结构",
+    "inputs": {
+      "json_data": {
+        "name": "JSON 数据",
+        "tooltip": "输入的 JSON 字符串。支持自动定位括号和补全截断内容。"
+      },
+      "delimiters": {
+        "name": "多级分隔符",
+        "tooltip": "多行输入：第一行对应一级分隔符，第二行对应二级分隔符，以此类推。支持 \\n 和 \\t。"
+      },
+      "keep_key": {
+        "name": "保留键名",
+        "tooltip": "处理对象/字典时是否保留键名。开启后格式为 'Key:Value'。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "文本",
+        "tooltip": "解包并拼接后的最终纯文本字符串。"
+      }
+    }
+  },
+  "Pix_JSONSlicer": {
+    "display_name": "JSON 切片工具 (PixNodes)",
+    "description": "对 JSON 字符串、Python 列表或字典进行分块(Chunk)或范围切片(Slice)操作。",
+    "inputs": {
+      "json_data": {
+        "name": "JSON数据",
+        "tooltip": "支持连接任意类型：JSON 字符串、列表(List)或字典(Dict)"
+      },
+      "mode": {
+        "name": "处理模式",
+        "tooltip": "选择分块模式或范围模式",
+        "options": {
+          "chunk": "分块 (Chunk)",
+          "range": "范围 (Range)"
+        }
+      },
+      "length": {
+        "name": "长度/块大小",
+        "tooltip": "Chunk模式下为每组的大小；Range模式下为截取的长度"
+      },
+      "index": {
+        "name": "索引/起始位置",
+        "tooltip": "Chunk模式下为第几组(0开始)；Range模式下为截取的起始下标"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "JSON字符串",
+        "tooltip": "处理后的数据，格式化为 JSON 字符串"
+      },
+      "1": {
+        "name": "JSON数据",
+        "tooltip": "处理后的原始数据（List/Dict），可连接至其他支持该类型的节点"
+      },
+      "2": {
+        "name": "总数",
+        "tooltip": "Chunk模式下为总组数；Range模式下为元素总数"
+      },
+      "3": {
+        "name": "索引",
+        "tooltip": "当前的索引值（透传输入参数）"
+      }
+    }
+  },
+  "Pix_ImageBatchCompose": {
+    "display_name": "组合图像批次 (PixNodes)",
+    "description": "动态接收多个图像输入，并将它们组合为一个标准化的图像批次，支持自定义尺寸和背景填充。",
+    "inputs": {
+      "image_1": {
+        "tooltip": "动态图像输入接口。连接此插槽后，会自动出现 image_2，支持无限扩展。"
+      },
+      "mode": {
+        "name": "缩放模式",
+        "tooltip": "决定图像如何适应目标尺寸：填充(裁切)、适应(留白)或拉伸",
+        "options": {
+          "Fit": "适应 (Fit)",
+          "Fill": "填充 (Fill)",
+          "Stretch": "拉伸 (Stretch)"
+        }
+      },
+      "alignment": {
+        "name": "对齐方式",
+        "tooltip": "图像在画布中的对齐位置",
+        "options": {
+          "Center": "居中",
+          "Top Left": "左上",
+          "Top": "顶部",
+          "Top Right": "右上",
+          "Left": "左侧",
+          "Right": "右侧",
+          "Bottom Left": "左下",
+          "Bottom": "底部",
+          "Bottom Right": "右下"
+        }
+      },
+      "background_color": {
+        "name": "背景颜色",
+        "tooltip": "支持 Hex(#FF0000), RGB(255,0,0), Int 等多种格式，用于填充空白区域"
+      },
+      "size": {
+        "name": "目标尺寸",
+        "tooltip": "格式如 512x512。留空则使用第一张图的尺寸"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "图像批次",
+        "tooltip": "合并后的 Image Batch"
+      }
+    }
+  },
+  "Pix_JsonListZip": {
+    "display_name": "JSON 列表同步合并 (PixNodes)",
+    "description": "像拉链一样将多个列表同步合并。支持对象属性自动展开和广播模式。",
+    "inputs": {
+      "merge_keys": {
+        "name": "合并键名列表",
+        "tooltip": "在此定义输入端口。\n每行一个 Key。\n使用 @前缀 (如 @style) 可开启广播模式，将第一个值应用到所有对象。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "JSON列表字符串",
+        "tooltip": "合并后的 JSON 字符串数据"
+      },
+      "1": {
+        "name": "JSON 列表",
+        "tooltip": "合并后的原始列表数据 (Python List)"
+      }
+    }
+  },
+  "Pix_JsonListPluck": {
+    "display_name": "JSON 列表摘取 (PixNodes)",
+    "description": "从 JSON 数组中智能提取字段。V2.0增强：支持“shot_prompt=shots_prompts”等词根模糊匹配；自动过滤 LLM 废话；自动修复截断的 JSON 语法。",
+    "inputs": {
+      "json_list_input": {
+        "name": "JSON 列表输入",
+        "tooltip": "连接包含 JSON 对象数组的字符串（会自动过滤 LLM 废话前缀）。"
+      },
+      "filter_keys": {
+        "name": "摘取键列表 (每行一个)",
+        "tooltip": "输入要摘取的字段名。\n支持深度模糊匹配（忽略大小写、复数、下划线）。\n分离模式：输出纯值列表。\n合并模式：输出对象列表。"
+      },
+      "merge_output": {
+        "name": "合并摘取结果",
+        "tooltip": "开启：合并所有字段到一个数组对象中。\n关闭：每个字段独立输出为对应的值列表。",
+        "label_on": "合并模式",
+        "label_off": "分离模式"
+      }
+    }
+  },
+  "Pix_JsonObjectExtract": {
+    "display_name": "JSON 对象提取 (PixNodes)",
+    "description": "智能解析 JSON 和 LLM 输出。支持模糊匹配、多行文本动态创建端口、正则自动修复及合并输出模式。",
+    "inputs": {
+      "json_input": {
+        "name": "JSON 对象输入",
+        "tooltip": "连接包含 JSON 数据的字符串，通常来自 LLM 输出或文本加载器。"
+      },
+      "match_keys": {
+        "name": "匹配键列表 (每行一个)",
+        "tooltip": "在此输入要提取的 Key，每行对应一个提取目标。\n分离模式：每行生成一个输出端口。\n合并模式：筛选这些Key合并到结果对象。"
+      },
+      "merge_output": {
+        "name": "合并输出",
+        "tooltip": "开启：输出包含所有字段的单一JSON对象。\n关闭：每个字段独立输出。对象直接输出，单值包裹在数组中。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "tooltip": "分离模式：输出原生对象或值列表；合并模式：输出完整过滤后的对象。"
+      }
+    }
+  },
   "Pix_GetVideoFromVideoList": {
     "display_name": "从视频列表获取视频 (PixNodes)",
     "description": "从输入的视频列表(VIDEO对象)中，根据索引选择一个视频输出。",
@@ -313,13 +591,13 @@
           "Bottom Right": "右下"
         }
       },
-      "size": {
-        "name": "目标尺寸",
-        "tooltip": "输出的分辨率 (宽,高)。留空则跟随首图尺寸"
-      },
       "background_color": {
         "name": "背景颜色",
         "tooltip": "适应模式下的空白区域颜色 (RGB或Hex)"
+      },
+      "size": {
+        "name": "目标尺寸",
+        "tooltip": "输出的分辨率 (宽,高)。留空则跟随首图尺寸"
       }
     },
     "outputs": {

@@ -1,7 +1,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-// [新增] 注入自定义 CSS 以实现滑块的白色/灰色配色 (参考 create_video_list.js)
+// [新增] 注入自定义 CSS 以实现滑块的白色/灰色配色
 const style = document.createElement('style');
 style.textContent = `
     .pix-video-slider {
@@ -9,7 +9,7 @@ style.textContent = `
         appearance: none;
         background: transparent;
         cursor: pointer;
-        width: 60px; /* 控制滑块宽度 */
+        width: 60px;
         margin: 0 4px;
     }
     .pix-video-slider::-webkit-slider-runnable-track {
@@ -20,7 +20,7 @@ style.textContent = `
     .pix-video-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        margin-top: -4px; /* 居中 */
+        margin-top: -4px;
         background-color: #888;
         height: 12px;
         width: 12px;
@@ -47,32 +47,35 @@ app.registerExtension({
             nodeType.prototype.onNodeCreated = function () {
                 const r = onNodeCreated ? onNodeCreated.apply(this, arguments) : undefined;
                 
-                // [修改] 设置默认大小为 520
+                // 设置默认节点大小
                 this.size = [520, 400]; 
 
+                // 辅助函数：隐藏原生 Widget 但保留引用
                 const hideNativeWidget = (name) => {
                     const w = this.widgets.find(w => w.name === name);
                     if (w) {
-                        w.computeSize = () => [0, -4];
+                        w.computeSize = () => [0, -4]; // 隐藏占用空间
                         w.origDraw = w.draw;
-                        w.draw = () => {}; 
+                        w.draw = () => {}; // 禁止绘制
                     }
                     return w;
                 };
 
+                // 获取原生 Widget 引用
                 const w_width = hideNativeWidget("batch_width");
                 const w_height = hideNativeWidget("batch_height");
                 const w_color = hideNativeWidget("bg_color");
                 const w_method = hideNativeWidget("method"); 
                 
+                // 初始化内部状态
                 this.images = [];
                 this.viewMode = "grid"; 
                 this.fillMode = w_method ? w_method.value : "fill"; 
                 this.isUploading = false;
                 
-                // 状态变量
-                this.maxPreviewRes = 2000; // 前端预采样最大分辨率
-                this.gridBaseSize = 80;    // 网格预览大小
+                // UI 状态变量（仅前端使用，不保存）
+                this.maxPreviewRes = 2000; 
+                this.gridBaseSize = 80;    
                 
                 this.selectedIndices = new Set();
                 this.lastSelectedIndex = null; 
@@ -89,16 +92,21 @@ app.registerExtension({
                     return "contain";
                 };
                 
+                // --- 核心: image_data Widget ---
                 const dataWidget = {
                     type: "custom_image_data",
                     name: "image_data",
                     value: "[]",
                     draw: function(ctx, node, widget_width, y, widget_height) {},
-                    computeSize: function(width) { return [width, 0]; }
+                    computeSize: function(width) { return [width, 0]; },
+                    // [修改] 显式允许序列化，确保值被写入 workflow.json
+                    serializeValue(serializedNode, widgetIndex) {
+                        return this.value;
+                    }
                 };
                 this.addCustomWidget(dataWidget);
 
-                // --- DOM 容器 ---
+                // --- DOM 容器构建 ---
                 const container = document.createElement("div");
                 container.className = "pix-batch-container";
                 
@@ -126,7 +134,7 @@ app.registerExtension({
                     }
                 };
 
-                // --- UI States ---
+                // --- Empty State UI ---
                 const emptyState = document.createElement("div");
                 Object.assign(emptyState.style, {
                     width: "100%", height: "100%", display: "flex",
@@ -146,6 +154,7 @@ app.registerExtension({
                 emptyState.appendChild(btnBigAdd);
                 container.appendChild(emptyState);
 
+                // --- Main View UI ---
                 const mainView = document.createElement("div");
                 Object.assign(mainView.style, {
                     width: "100%", height: "100%", display: "none", flexDirection: "column",
@@ -184,7 +193,7 @@ app.registerExtension({
                 btnUndo.style.opacity = "0.3"; btnUndo.style.pointerEvents = "none";
                 btnRedo.style.opacity = "0.3"; btnRedo.style.pointerEvents = "none";
 
-                // --- 参数序列化 ---
+                // --- 状态序列化 (用于撤销/重做) ---
                 const serializeState = () => {
                     return JSON.stringify({
                         images: this.images,
@@ -192,6 +201,7 @@ app.registerExtension({
                         h: parseInt(inputH.value),
                         fill: this.fillMode,
                         color: w_color ? w_color.value : "#000000",
+                        // 只序列化会影响输出的参数，前端显示参数不序列化
                         maxRes: this.maxPreviewRes,
                         gridSize: this.gridBaseSize
                     });
@@ -225,31 +235,24 @@ app.registerExtension({
                     return inp;
                 };
 
+                // 宽高输入框 (关联原生 Widget)
                 const inputW = createNumInput("W", w_width ? w_width.value : 1080, (v) => { if(w_width) w_width.value = Number(v); });
                 const inputH = createNumInput("H", w_height ? w_height.value : 1080, (v) => { if(w_height) w_height.value = Number(v); });
                 
                 if(w_width) w_width.value = Number(inputW.value);
                 if(w_height) w_height.value = Number(inputH.value);
 
-                // [修改] Max Preview Res 输入框: 宽度改为 50px
-                // 并且在回调中添加清理缓存和重新渲染的逻辑
+                // Max Preview Res 输入框
                 const inputMaxRes = createNumInput("Res", this.maxPreviewRes, (v) => {
                     this.maxPreviewRes = parseInt(v) || 2000;
-                    
-                    // 清理旧缓存，强制使用新分辨率重新生成
                     if (this.thumbnailCache) {
                         this.thumbnailCache.forEach(url => {
-                            if (url && url.startsWith("blob:")) {
-                                URL.revokeObjectURL(url);
-                            }
+                            if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
                         });
                         this.thumbnailCache.clear();
                     }
-                    // 重新渲染视图
                     renderContent();
                 }, "50px", "Max Preview Resolution (Long Edge)");
-                
-                // [新增] 降低颜色亮度，使其看起来像辅助参数 (#777 比默认 #ddd 暗)
                 inputMaxRes.style.color = "#777";
                 
                 // Grid Size 滑块
@@ -275,11 +278,10 @@ app.registerExtension({
                     }
                 };
 
-                // [修改] 移除了竖线分割符 (sep)
-
                 const xLabel = document.createElement("span");
                 xLabel.innerText = "x"; xLabel.style.color = "#666"; xLabel.style.fontSize = "10px";
 
+                // 颜色选择器
                 const colorBox = document.createElement("div");
                 Object.assign(colorBox.style, {
                     width: "14px", height: "14px", background: w_color ? w_color.value : "#000",
@@ -294,10 +296,7 @@ app.registerExtension({
                     opacity: "0", cursor: "pointer", display: "block", zIndex: 10
                 });
                 
-                colorInputHidden.onclick = () => {
-                    this.tempSnapshot = serializeState();
-                };
-
+                colorInputHidden.onclick = () => { this.tempSnapshot = serializeState(); };
                 colorInputHidden.onchange = (e) => {
                     if (this.tempSnapshot) {
                         pushToUndo(this.tempSnapshot);
@@ -309,6 +308,7 @@ app.registerExtension({
                     container.style.setProperty("--grid-bg", hex);
                 };
 
+                // 填充模式选择器
                 const fillSelect = document.createElement("select");
                 Object.assign(fillSelect.style, {
                     background: "#111", color: "#ddd", border: "1px solid #555",
@@ -321,7 +321,6 @@ app.registerExtension({
                     { val: "fill", txt: "Fill" },
                     { val: "stretch", txt: "Stretch" }
                 ];
-                
                 fillOptions.forEach(opt => {
                     const el = document.createElement("option");
                     el.value = opt.val;
@@ -330,10 +329,7 @@ app.registerExtension({
                     fillSelect.appendChild(el);
                 });
 
-                fillSelect.onfocus = () => {
-                    this.tempSnapshot = serializeState();
-                };
-
+                fillSelect.onfocus = () => { this.tempSnapshot = serializeState(); };
                 fillSelect.onchange = (e) => {
                     if (this.tempSnapshot) {
                         pushToUndo(this.tempSnapshot);
@@ -346,20 +342,15 @@ app.registerExtension({
                 };
                 fillSelect.onmousedown = (e) => e.stopPropagation(); 
 
-                // --- 组装工具栏 (顺序：Undo -> Redo -> MaxRes -> Slider -> W -> x -> H -> Fill -> Color) ---
+                // 组装 Toolbar
                 leftGroup.appendChild(btnUndo);
                 leftGroup.appendChild(btnRedo);
-                
                 leftGroup.appendChild(inputMaxRes);
                 leftGroup.appendChild(sliderGrid);
-                
-                // [修改] 移除了 sep 的添加
-
                 leftGroup.appendChild(inputW);
                 leftGroup.appendChild(xLabel);
                 leftGroup.appendChild(inputH);
                 leftGroup.appendChild(fillSelect); 
-                
                 colorBox.appendChild(colorInputHidden);
                 leftGroup.appendChild(colorBox); 
 
@@ -399,19 +390,20 @@ app.registerExtension({
                 mainView.appendChild(contentArea);
                 container.appendChild(mainView);
                 
+                // 隐藏的文件输入框
                 const fileInput = document.createElement("input");
                 fileInput.type = "file"; fileInput.multiple = true; fileInput.accept = "image/*";
                 fileInput.style.display = "none";
                 document.body.appendChild(fileInput);
 
-                // --- 注册 DOM Widget ---
+                // 注册 DOM Widget
                 const widget = this.addDOMWidget("image_batch_ui", "ui", container, {
                     serialize: false,
                     hideOnZoom: false
                 });
                 widget.computeSize = () => [0, 0];
 
-                // --- Resize 处理 ---
+                // Resize 处理
                 const originalOnResize = this.onResize;
                 this.onResize = function(size) {
                     if (originalOnResize) originalOnResize.apply(this, arguments);
@@ -426,8 +418,7 @@ app.registerExtension({
                     }
                 };
 
-                // --- 逻辑控制 ---
-
+                // Undo / Redo 系统
                 const updateUndoRedoBtnState = () => {
                     const setBtn = (btn, active) => {
                         if (active) {
@@ -468,6 +459,7 @@ app.registerExtension({
                         this.fillMode = state.fill || "fill";
                         this.selectedIndices.clear(); 
                         
+                        // 恢复参数
                         inputW.value = state.w;
                         inputH.value = state.h;
                         fillSelect.value = this.fillMode;
@@ -481,6 +473,7 @@ app.registerExtension({
                         this.gridBaseSize = state.gridSize || 80;
                         sliderGrid.value = this.gridBaseSize;
                         
+                        // 同步到 Widget
                         if (w_width) w_width.value = state.w;
                         if (w_height) w_height.value = state.h;
                         if (w_method) w_method.value = this.fillMode;
@@ -551,12 +544,11 @@ app.registerExtension({
                     indicesToDelete.forEach(idx => {
                         const img = this.images[idx];
                         if (img) {
+                            // 清理缓存
                             const fullUrl = `/view?filename=${encodeURIComponent(img.filename)}&type=${img.type}&subfolder=${encodeURIComponent(img.subfolder)}`;
                             if (this.thumbnailCache.has(fullUrl)) {
                                 const blobUrl = this.thumbnailCache.get(fullUrl);
-                                if (blobUrl && blobUrl.startsWith("blob:")) {
-                                    URL.revokeObjectURL(blobUrl);
-                                }
+                                if (blobUrl && blobUrl.startsWith("blob:")) URL.revokeObjectURL(blobUrl);
                                 this.thumbnailCache.delete(fullUrl);
                             }
                         }
@@ -590,6 +582,7 @@ app.registerExtension({
                 btnBigAdd.onclick = handleUploadClick;
                 btnAddSmall.onclick = handleUploadClick;
 
+                // --- 核心修改: 上传文件逻辑 ---
                 fileInput.onchange = async (e) => {
                     const files = Array.from(e.target.files);
                     if (!files.length) return;
@@ -608,7 +601,8 @@ app.registerExtension({
                     for (const file of files) {
                         const body = new FormData();
                         body.append("image", file);
-                        body.append("subfolder", "");
+                        // [修改] 指定子文件夹路径
+                        body.append("subfolder", "PixNodes/CreateImageBatch");
                         body.append("type", "input");
                         try {
                             const resp = await api.fetchApi("/upload/image", { method: "POST", body });
@@ -974,6 +968,46 @@ app.registerExtension({
                         });
                         this.thumbnailCache.clear();
                     }
+                };
+                
+                // --- 核心修改: 重写 configure 方法以实现参数恢复 ---
+                // 在节点加载或刷新时，ComfyUI 会调用 configure 方法
+                const origConfigure = this.configure;
+                this.configure = function(info) {
+                    // 1. 执行原始的 configure 逻辑
+                    if (origConfigure) origConfigure.apply(this, arguments);
+                    
+                    // 2. [修改] 同步后端 Widget 的值到前端 DOM
+                    // 这一步确保了刷新网页后，输入框的值等于上次保存的值
+                    if (w_width) inputW.value = w_width.value;
+                    if (w_height) inputH.value = w_height.value;
+                    if (w_method) {
+                        this.fillMode = w_method.value;
+                        fillSelect.value = this.fillMode;
+                    }
+                    if (w_color) {
+                        const color = w_color.value;
+                        colorBox.style.background = color;
+                        container.style.setProperty("--grid-bg", color);
+                    }
+
+                    // 3. 从 widget 中恢复图像数据
+                    const w_data = this.widgets.find(w => w.name === "image_data");
+                    if (w_data && w_data.value && w_data.value !== "[]" && typeof w_data.value === "string") {
+                        try {
+                            const loadedImages = JSON.parse(w_data.value);
+                            if (Array.isArray(loadedImages) && loadedImages.length > 0) {
+                                this.images = loadedImages;
+                                // 立即更新状态，显示恢复的图片
+                                updateState(); 
+                            }
+                        } catch (e) {
+                            console.error("Pix_CreateImageBatch: 恢复图像数据失败", e);
+                        }
+                    }
+                    
+                    // 确保网格样式正确更新
+                    updateGridLook();
                 };
 
                 setTimeout(() => {
