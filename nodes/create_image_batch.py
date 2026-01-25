@@ -61,8 +61,8 @@ class CreateImageBatch:
             subfolder = img_info.get("subfolder", "")
             img_type = img_info.get("type", "input")
             
-            # [核心修复]：组合子文件夹路径
-            # 之前直接使用 filename 导致无法找到 input/PixNodes/... 下的文件
+            # [核心逻辑]：组合子文件夹路径
+            # 这里会自动读取 JS 传过来的 "pix-images" 子文件夹
             if subfolder:
                 full_path = os.path.join(subfolder, filename)
             else:

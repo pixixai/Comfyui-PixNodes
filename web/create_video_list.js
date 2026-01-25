@@ -68,14 +68,12 @@ app.registerExtension({
                 this.redoStack = [];
                 
                 // --- 核心 Widget: video_data ---
-                // 确保数据能被序列化保存
                 const dataWidget = {
                     type: "custom_video_data",
                     name: "video_data",
                     value: "[]",
                     draw: function(ctx, node, widget_width, y, widget_height) {},
                     computeSize: function(width) { return [width, 0]; },
-                    // [关键] 必须允许序列化，否则刷新后数据丢失
                     serializeValue(serializedNode, widgetIndex) {
                         return this.value;
                     }
@@ -88,7 +86,6 @@ app.registerExtension({
                 
                 Object.assign(container.style, {
                     width: "100%",
-                    // height 由 onResize 控制
                     backgroundColor: "#111",
                     borderRadius: "0px 0px 8px 8px",
                     display: "flex", 
@@ -245,23 +242,17 @@ app.registerExtension({
                 this.onResize = function(size) {
                     if (originalOnResize) originalOnResize.apply(this, arguments);
                     
-                    // 1. 临时告诉系统这个 DOM widget 高度为 0
                     widget.computeSize = () => [0, 0];
-                    
-                    // 2. 计算节点在没有这个 DOM widget 时的最小高度 (Header + 隐藏 Widget)
                     const minSize = this.computeSize(); 
                     
-                    // 3. 计算可用高度
-                    // 使用 size[1] (当前节点高度) 减去骨架高度，再留出底部 Resize Handle 的安全距离
                     let availableHeight = size[1] - minSize[1] - 15;
                     
-                    // [修复] 兜底逻辑：如果计算异常，使用节点总高度的大部分
                     if (availableHeight <= 0) {
                         availableHeight = Math.max(100, size[1] - 40); 
                     }
                     
                     container.style.height = `${availableHeight}px`;
-                    container.style.maxHeight = `${availableHeight}px`; // 确保不溢出
+                    container.style.maxHeight = `${availableHeight}px`; 
                 };
 
                 // --- Logic ---
@@ -328,7 +319,7 @@ app.registerExtension({
                 btnBigAdd.onclick = handleUploadClick;
                 btnAddSmall.onclick = handleUploadClick;
 
-                // --- 核心修改: 上传到指定子文件夹 ---
+                // --- 上传到指定子文件夹 ---
                 fileInput.onchange = async (e) => {
                     const files = Array.from(e.target.files);
                     if (!files.length) return;
@@ -342,8 +333,7 @@ app.registerExtension({
                     for (const file of files) {
                         const body = new FormData();
                         body.append("image", file); 
-                        // [修改] 指定子文件夹
-                        body.append("subfolder", "PixNodes/CreateVideoList");
+                        body.append("subfolder", "pix-videos");
                         body.append("type", "input");
                         try {
                             const resp = await api.fetchApi("/upload/image", { method: "POST", body });
@@ -374,7 +364,6 @@ app.registerExtension({
                         mainView.style.display = "flex";
                         renderContent();
                     }
-                    // [修复] 每次状态更新（如上传后）强制触发布局更新，解决内容溢出问题
                     if (this.onResize) {
                         this.onResize(this.size);
                     }
@@ -453,10 +442,15 @@ app.registerExtension({
                             
                             item.draggable = !this.isUploading; 
                             
+                            // [关键逻辑] 
+                            // 1. 如果内存中已经有该视频的宽高(vid.w/h)，直接使用计算好的尺寸
+                            // 2. 如果没有(如刷新后)，先不显示 (display: none)，等加载完元数据再显示
                             let initialW = BASE_SIZE;
                             let initialH = BASE_SIZE;
+                            let isKnownSize = false;
 
                             if (vid.w && vid.h) {
+                                isKnownSize = true;
                                 if (vid.w >= vid.h) {
                                     initialH = BASE_SIZE;
                                     initialW = BASE_SIZE * (vid.w / vid.h);
@@ -473,17 +467,19 @@ app.registerExtension({
                                 background: "#000", borderRadius: "4px",
                                 border: isSelected ? "2px solid #2196F3" : "1px solid #444", 
                                 cursor: this.isUploading ? "wait" : "grab",
-                                boxSizing: "border-box", overflow: "hidden", display: "flex",
+                                boxSizing: "border-box", overflow: "hidden", 
+                                // [修改] 如果不知道尺寸，先隐藏容器，避免显示正方形
+                                display: isKnownSize ? "flex" : "none",
                                 alignItems: "center", justifyContent: "center"
                             });
 
                             const videoEl = document.createElement("video");
-                            // [提示] 使用 encodeURIComponent 确保路径安全
                             let src = `/view?filename=${encodeURIComponent(vid.filename)}&type=${vid.type}&subfolder=${encodeURIComponent(vid.subfolder)}`;
-                            videoEl.src = src;
+                            
                             videoEl.muted = true;
                             videoEl.loop = true;
-                            videoEl.preload = "metadata";
+                            videoEl.preload = "auto"; 
+                            
                             Object.assign(videoEl.style, {
                                 width: "100%", height: "100%", 
                                 objectFit: "contain",
@@ -491,23 +487,43 @@ app.registerExtension({
                                 pointerEvents: "none", 
                             });
 
-                            videoEl.onloadedmetadata = () => {
+                            // [关键修改] 元数据加载回调
+                            const onMetadata = () => {
                                 const vw = videoEl.videoWidth;
                                 const vh = videoEl.videoHeight;
                                 if (!vw || !vh) return;
 
-                                if (vid.w !== vw || vid.h !== vh) {
+                                // 更新或初始化尺寸
+                                if (vid.w !== vw || vid.h !== vh || !isKnownSize) {
                                     vid.w = vw;
                                     vid.h = vh;
+                                    
+                                    let newW, newH;
                                     if (vw >= vh) {
-                                        item.style.height = BASE_SIZE + "px";
-                                        item.style.width = (BASE_SIZE * (vw/vh)) + "px";
+                                        newH = BASE_SIZE;
+                                        newW = BASE_SIZE * (vw/vh);
                                     } else {
-                                        item.style.width = BASE_SIZE + "px";
-                                        item.style.height = (BASE_SIZE * (vh/vw)) + "px";
+                                        newW = BASE_SIZE;
+                                        newH = BASE_SIZE * (vh/vw);
                                     }
+                                    
+                                    // 应用新尺寸并显示出来
+                                    item.style.width = newW + "px";
+                                    item.style.height = newH + "px";
+                                    item.style.flexBasis = newW + "px";
+                                    item.style.display = "flex"; // 视频准备好了，显示！
+                                    
+                                    isKnownSize = true;
                                 }
                             };
+
+                            videoEl.onloadedmetadata = onMetadata;
+                            videoEl.src = src;
+
+                            // 检查缓存
+                            if (videoEl.readyState >= 1) {
+                                onMetadata();
+                            }
 
                             const progBg = document.createElement("div");
                             Object.assign(progBg.style, {
@@ -587,6 +603,7 @@ app.registerExtension({
                         });
 
                     } else {
+                        // List View (不变)
                         Object.assign(contentArea.style, {
                             display: "flex", flexDirection: "column", gap: "2px", 
                             flexWrap: "nowrap", alignItems: "stretch" 
@@ -711,10 +728,16 @@ app.registerExtension({
                     };
                 };
 
+                // 更新节点数据时，剥离 w 和 h 属性
                 const updateNodeData = () => {
                     const w = this.widgets.find(w => w.name === "video_data");
                     if (w) {
-                        w.value = JSON.stringify(this.videos);
+                        const cleanData = this.videos.map(v => ({
+                            filename: v.filename,
+                            subfolder: v.subfolder,
+                            type: v.type
+                        }));
+                        w.value = JSON.stringify(cleanData);
                     }
                 };
 
@@ -724,8 +747,6 @@ app.registerExtension({
                     fileInput.remove();
                 };
                 
-                // --- 核心修改 2: 重写 configure 以实现数据恢复 ---
-                // 当 ComfyUI 加载工作流时，会调用此方法并传入 Widget 的保存值
                 const origConfigure = this.configure;
                 this.configure = function(info) {
                     if (origConfigure) origConfigure.apply(this, arguments);
@@ -745,7 +766,6 @@ app.registerExtension({
                     }
                 };
                 
-                // [修复] 强制触发首次 Resize，确保容器有高度
                 setTimeout(() => {
                     updateState();
                     updateNodeData();

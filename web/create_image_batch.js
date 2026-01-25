@@ -601,8 +601,8 @@ app.registerExtension({
                     for (const file of files) {
                         const body = new FormData();
                         body.append("image", file);
-                        // [修改] 指定子文件夹路径
-                        body.append("subfolder", "PixNodes/CreateImageBatch");
+                        // [修改] 指定子文件夹路径为 pix-images
+                        body.append("subfolder", "pix-images");
                         body.append("type", "input");
                         try {
                             const resp = await api.fetchApi("/upload/image", { method: "POST", body });
@@ -752,7 +752,7 @@ app.registerExtension({
                                 borderRadius: "4px",
                                 border: isSelected ? "2px solid #2196F3" : "1px solid #444", 
                                 backgroundSize: cssSize, 
-                                backgroundRepeat: "no-repeat",
+                                backgroundRepeat: "no-repeat", 
                                 backgroundPosition: "center",
                                 cursor: this.isUploading ? "wait" : "grab",
                                 boxSizing: "border-box" 

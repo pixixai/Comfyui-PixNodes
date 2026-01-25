@@ -55,7 +55,7 @@ class VideoList:
             if subfolder == "": subfolder = None
             
             # [核心修复]：组合子文件夹路径
-            # 确保能读取 input/PixNodes/CreateVideoList/ 下的文件
+            # 这里会自动读取 JS 传过来的 "pix-videos" 子文件夹
             if subfolder:
                 full_path_check = os.path.join(subfolder, filename)
             else:
@@ -65,6 +65,7 @@ class VideoList:
             video_path = folder_paths.get_annotated_filepath(full_path_check)
             
             # 兜底：如果 get_annotated_filepath 没找到，尝试手动检查
+            # 这可以防止 ComfyUI 核心路径逻辑无法解析特定子文件夹层级的情况
             if video_path is None or not os.path.exists(video_path):
                 input_dir = folder_paths.get_input_directory()
                 manual_path = os.path.join(input_dir, full_path_check)
