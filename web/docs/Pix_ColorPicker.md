@@ -1,4 +1,4 @@
-# Color Picker (PixNodes) - 拾色器节点
+# 拾色器节点
 
 **Pix_ColorPicker** 是一个功能强大的自定义拾色器节点，旨在为 ComfyUI 工作流提供直观、灵活的颜色选择和转换功能。
 

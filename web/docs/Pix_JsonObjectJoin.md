@@ -1,4 +1,4 @@
-# JSON Object Join (PixNodes)
+# 连接到JSON对象
 
 **JSON 对象合并**节点用于将任意数量、任意类型的输入数据合并为一个标准的 JSON 对象（字典）。
 

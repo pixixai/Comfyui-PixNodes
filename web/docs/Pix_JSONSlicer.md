@@ -1,4 +1,4 @@
-# JSON Slicer (PixNodes)
+# JSON切片工具
 
 **JSON Slicer** 是一个用于 ComfyUI 的轻量级 JSON 数据处理节点，专注于对 JSON 列表或字典进行切片（Slice）和分块（Chunk）操作。
 

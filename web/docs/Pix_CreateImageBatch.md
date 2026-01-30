@@ -1,4 +1,4 @@
-# Create Image Batch (Pix) 节点使用说明
+# 创建图像批次
 
 **节点名称**: `Pix_CreateBatchImages`
 

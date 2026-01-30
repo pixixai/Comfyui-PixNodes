@@ -1,4 +1,4 @@
-# Pix_IfElseLogicGate (IfElse 逻辑阀) 节点说明
+# IfElse 逻辑阀
 
 ## 1. 节点功能概览
 

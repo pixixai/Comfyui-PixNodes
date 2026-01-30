@@ -1,4 +1,4 @@
-# JSON 对象合并 (PixNodes)
+# JSON 对象合并
 
 **JSON Object Combine** 是一个功能强大的动态节点，用于将零散的数据流汇聚成结构化的 JSON 对象。它不仅支持普通的键值对赋值，还支持智能识别并“打散”输入的 JSON 对象（类似编程中的 Spread 操作）。
 

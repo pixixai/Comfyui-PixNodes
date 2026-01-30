@@ -1,4 +1,4 @@
-# Create Video List (PixNodes)
+# 创建视频列表
 
 **Create Video List** 是一个用于批量管理视频素材的高效节点，位于 **PixNodes/video** 分类下。它提供了一个可视化的交互面板，允许用户在 ComfyUI 界面中上传、预览、排序视频文件。
 

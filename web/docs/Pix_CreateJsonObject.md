@@ -1,4 +1,4 @@
-# 创建 JSON 对象 (PixNodes)
+# 创建 JSON 对象
 
 **Pix_CreateJsonObject** 是一个提供富交互界面的节点，允许用户以类似 Notion 的“块”操作方式，轻松创建和编辑 JSON 对象（键值对）。
 

@@ -1,4 +1,4 @@
-# Pix_EmptyListGenerator (空列表生成器) 使用指南
+# 创建空列表
 
 ## 1. 节点功能概览
 

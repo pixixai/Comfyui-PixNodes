@@ -1,4 +1,4 @@
-# Pix_IfElseDispatcher (IfElse 分发器) 节点说明
+# IfElse 分发器
 
 ## 1. 节点功能概览
 

@@ -1,4 +1,4 @@
-# Universal Unicode Decoder (通用 Unicode 解码器)
+# 通用 Unicode 解码器
 
 ## 节点功能概览
 

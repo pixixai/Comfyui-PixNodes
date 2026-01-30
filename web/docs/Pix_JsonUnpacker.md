@@ -1,4 +1,4 @@
-# JSON Unpacker (PixNodes)
+# JSON 解包
 
 **JSON Unpacker** 是一个用于处理和格式化 JSON 数据的实用节点。它可以接收 JSON 字符串，将其内部结构“解包”并展平，去除所有的括号、引号和缩进，最终输出为纯文本字符串。
 

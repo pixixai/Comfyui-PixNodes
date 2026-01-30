@@ -1,4 +1,4 @@
-# JSON List Join (PixNodes)
+# 连接到 JSON 列表
 
 **JSON 列表合并**节点用于将任意数量、任意类型的输入数据合并为一个标准的 JSON 列表。
 

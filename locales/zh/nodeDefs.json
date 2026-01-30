@@ -1,4 +1,18 @@
 {
+  "Pix_ImageComparer": {
+    "display_name": "图像对比 (PixNodes)",
+    "description": "一个支持滑动和点击切换的图像对比节点，用于比较前景和背景图像差异。",
+    "inputs": {
+      "foreground_image": {
+        "name": "前景图像",
+        "tooltip": "连接作为前景显示的图像 (通常标记为 F)"
+      },
+      "background_image": {
+        "name": "背景图像",
+        "tooltip": "连接作为背景显示的图像 (通常标记为 B)"
+      }
+    }
+  },
   "Pix_JsonObjectCombine": {
     "display_name": "合并为JSON对象 (PixNodes)",
     "description": "动态接收任意输入，支持智能解构合并对象或普通键值对赋值。",

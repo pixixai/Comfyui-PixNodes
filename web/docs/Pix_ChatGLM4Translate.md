@@ -1,4 +1,4 @@
-# Pix_ChatGLM4Translate (ChatGLM4 翻译) 节点说明
+# ChatGLM4 翻译
 
 ## 1. 节点功能概览
 

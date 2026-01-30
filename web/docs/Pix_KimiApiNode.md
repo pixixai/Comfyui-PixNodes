@@ -1,4 +1,4 @@
-# Pix_KimiApiNode (Kimi 助手) 节点说明
+# Kimi 助手
 
 ## 1. 节点功能概览
 

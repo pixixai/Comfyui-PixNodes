@@ -1,4 +1,4 @@
-# Pix_BaiduTranslateNode (百度翻译) 节点说明
+# 百度翻译
 
 ## 1. 节点功能概览
 
