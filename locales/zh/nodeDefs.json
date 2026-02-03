@@ -1,4 +1,65 @@
 {
+  "Pix_StoryboardPreviewer": {
+    "display_name": "分镜预览 (PixNodes)",
+    "description": "以自适应网格形式预览分镜图像、视频及元数据，支持鼠标滑动快速预览视频进度。",
+    "inputs": {
+      "image_batch": {
+        "name": "图像批次",
+        "tooltip": "输入的图像序列，将作为卡片的静态封面展示。决定卡片数量的第一优先级。"
+      },
+      "video_paths_list": {
+        "name": "视频路径列表",
+        "tooltip": "输入的视频路径列表。鼠标悬停预览区可进行滑动播放。"
+      },
+      "shot_content_json": {
+        "name": "分镜数据(JSON)",
+        "tooltip": "包含分镜元数据的 JSON 列表（如提示词、参数等），显示在卡片下方。"
+      }
+    },
+    "outputs": {}
+  },
+
+  "Pix_GridStoryboardPrompt": {
+    "display_name": "网格分镜提示词",
+    "description": "Grid Storyboard Prompt - 用于生成多面板网格布局的结构化提示词。隶属于 PixNodes/AIGV 分组。",
+    "inputs": {
+      "style": {
+        "name": "艺术风格",
+        "tooltip": "定义全局画风，如写实、二次元等，用于约束所有面板风格一致"
+      },
+      "scene": {
+        "name": "环境细节",
+        "tooltip": "背景、光影等场景规范"
+      },
+      "subject": {
+        "name": "主体细节",
+        "tooltip": "角色、主体形象的具体描述"
+      },
+      "shots": {
+        "name": "分镜内容",
+        "tooltip": "每个分镜面板具体的动作或构图内容"
+      },
+      "grid": {
+        "name": "网格规模",
+        "tooltip": "布局格式 (2x2, 3x3, 4x4)",
+        "options": {
+          "2x2": "2x2 布局 (4格)",
+          "3x3": "3x3 布局 (9格)",
+          "4x4": "4x4 布局 (16格)"
+        }
+      },
+      "ratio": {
+        "name": "比例",
+        "tooltip": "整体画布的宽高比"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "提示词",
+        "tooltip": "最终生成的结构化 Prompt 文本"
+      }
+    }
+  },
   "Pix_ImageComparer": {
     "display_name": "图像对比 (PixNodes)",
     "description": "一个支持滑动和点击切换的图像对比节点，用于比较前景和背景图像差异。",
@@ -370,7 +431,7 @@
         "tooltip": "包含按顺序排列的所有视频对象的列表。连接到下游节点（如 Get Video Components）会自动触发 ComfyUI 的批处理循环。"
       },
       "1": {
-        "name": "视频路径(JSON)",
+        "name": "视频路径列表",
         "tooltip": "包含所有视频绝对路径的 JSON 字符串。该输出在批处理循环中不会被拆分，每次循环都能获取完整的列表。"
       }
     }

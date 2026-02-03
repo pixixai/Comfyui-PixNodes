@@ -31,8 +31,8 @@ class VideoList:
     # 输出 VIDEO 类型 (如果支持)
     RETURN_TYPES = (("VIDEO", "STRING") if HAS_COMFY_API else ("STRING", "STRING"))
     
-    # 输出名称
-    RETURN_NAMES = ("video_list", "video_paths_json")
+    # 输出名称 [修改]: video_paths_json -> video_paths_list
+    RETURN_NAMES = ("video_list", "video_paths_list")
     
     # 开启批处理，自动拆分列表
     # (True, False) 表示第一个输出(video_list)会被拆分，第二个输出(json)不会被拆分

@@ -38,6 +38,11 @@ JSON处理、视频列表、图像批次、图像处理、循环、翻译、LLM�
 
 <!-- INCLUDE:web/docs/Pix_UniversalUnicodeDecoder.md -->
 
+### AIGV
+
+<!-- INCLUDE:web/docs/Pix_StoryboardPreviewer.md -->
+
+<!-- INCLUDE:web/docs/Pix_GridStoryboardPrompt.md -->
 
 ### 视频
 
@@ -123,6 +128,11 @@ JSON处理、视频列表、图像批次、图像处理、循环、翻译、LLM�
 
 
 ## 📝 更新日志
+[1.0.7] - 2026-02-03
+- 新增【分镜预览】节点
+- 新增【网格分镜提示词】节点
+- 【创建视频批次】节点输出端口"video_paths_json"修改为"video_paths_list"
+
 [1.0.6] - 2026-01-29
 - 增加【图像对比】节点
 - README.md自动化脚本
