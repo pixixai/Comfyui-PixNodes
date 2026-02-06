@@ -96,7 +96,7 @@ JSON处理、视频列表、图像批次、图像处理、循环、翻译、LLM�
 
 <!-- INCLUDE:web/docs/Pix_WhileLoopStart.md -->
 
-# 翻译
+### 翻译
 
 <!-- INCLUDE:web/docs/Pix_BaiduTranslateNode.md -->
 
