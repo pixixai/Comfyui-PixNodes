@@ -60,15 +60,15 @@ JSON处理、视频列表、图像批次、图像处理、循环、翻译、LLM�
 
 <!-- INCLUDE:web/docs/Pix_JsonObjectCombine.md -->
 
-<!-- INCLUDE:web/docs/Pix_JsonListJoin.md -->
+<!-- INCLUDE:web/docs/Pix_JoinJsonList.md -->
 
-<!-- INCLUDE:web/docs/Pix_JsonObjectJoin.md -->
+<!-- INCLUDE:web/docs/Pix_JoinJsonObject.md -->
 
 <!-- INCLUDE:web/docs/Pix_JsonObjectExtract.md -->
 
 <!-- INCLUDE:web/docs/Pix_JsonUnpacker.md -->
 
-<!-- INCLUDE:web/docs/Pix_JsonListMerger.md -->
+<!-- INCLUDE:web/docs/Pix_JsonListZip.md -->
 
 <!-- INCLUDE:web/docs/Pix_JsonListPluck.md -->
 
@@ -92,7 +92,7 @@ JSON处理、视频列表、图像批次、图像处理、循环、翻译、LLM�
 
 <!-- INCLUDE:web/docs/Pix_ListFromLoop.md -->
 
-<!-- INCLUDE:web/docs/Pix_WhileLoopEnd.md.md -->
+<!-- INCLUDE:web/docs/Pix_WhileLoopEnd.md -->
 
 <!-- INCLUDE:web/docs/Pix_WhileLoopStart.md -->
 
