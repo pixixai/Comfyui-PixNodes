@@ -74,6 +74,10 @@ JSON处理、视频列表、图像批次、图像处理、循环、翻译、LLM�
 
 <!-- INCLUDE:web/docs/Pix_JSONSlicer.md -->
 
+<!-- INCLUDE:web/docs/Pix_JsonMutation.md -->
+
+<!-- INCLUDE:web/docs/Pix_JsonKeyValueSplit.md -->
+
 ### LLM
 
 <!-- INCLUDE:web/docs/Pix_KimiApiNode.md -->
