@@ -12,7 +12,7 @@ class AnyType(str):
 
 class JSONSlicer:
     """
-    JSON Slicer (PixNodes)
+    JSON 切片工具
     功能：
     1. Chunk (分块) 模式：将数据按 length 分组，取第 index 组。
     2. Range (范围) 模式：从 index 开始，取 length 个数据。
@@ -30,9 +30,10 @@ class JSONSlicer:
             }
         }
 
-    RETURN_TYPES = ("STRING", AnyType("*"), "INT", "INT")
-    # [修改] 输出端口名称更改为 json_data_str 和 json_data
-    RETURN_NAMES = ("json_data_str", "json_data", "count", "index")
+    # [修改] 删除 STRING (json_data_str) 输出
+    RETURN_TYPES = (AnyType("*"), "INT", "INT")
+    # [修改] 输出端口名称更改，移除了 json_data_str
+    RETURN_NAMES = ("json_data", "count", "index")
     FUNCTION = "slice_json"
     CATEGORY = "PixNodes/JSON"
 
@@ -45,7 +46,8 @@ class JSONSlicer:
         if isinstance(data_input, str):
             if not data_input.strip():
                 print(f"⚠️ [JSONSlicer] 输入为空")
-                return ("", [], 0, index)
+                # [修改] 返回值移除字符串部分
+                return ([], 0, index)
             try:
                 processed_data = json_module.loads(data_input)
             except Exception:
@@ -99,17 +101,18 @@ class JSONSlicer:
         else:
             final_data = sliced_result
 
-        # 8. 格式化输出
-        json_output = "[]"
-        try:
-            json_output = json_module.dumps(final_data, ensure_ascii=False, indent=2)
-        except TypeError:
-            try:
-                json_output = str(final_data)
-            except Exception:
-                pass
+        # 8. 格式化输出 (虽然不再输出字符串端口，保留逻辑用于可能的调试或日志)
+        # json_output = "[]"
+        # try:
+        #     json_output = json_module.dumps(final_data, ensure_ascii=False, indent=2)
+        # except TypeError:
+        #     try:
+        #         json_output = str(final_data)
+        #     except Exception:
+        #         pass
 
-        return (json_output, final_data, out_count, index)
+        # [修改] 仅返回数据对象和计数索引
+        return (final_data, out_count, index)
 
 # 节点注册
 NODE_CLASS_MAPPINGS = {

@@ -3,7 +3,7 @@ from typing import Tuple, Dict, Any, List
 
 class CreateJsonObject:
     """
-    PixNodes - 创建JSON对象 (Key-Value)
+    创建 JSON 对象
     
     功能：
     提供一个 Notion 风格的 Key-Value 编辑界面。
@@ -20,14 +20,15 @@ class CreateJsonObject:
             }
         }
 
-    # 修改顺序：将 STRING (json_str) 放在前面
-    RETURN_TYPES = ("STRING", "JSON") 
-    RETURN_NAMES = ("json_str", "json")
+    # [修改] 删除 STRING (json_str) 输出，仅保留 JSON
+    RETURN_TYPES = ("JSON",) 
+    # [修改] 输出名称改为 json_object
+    RETURN_NAMES = ("json_object",)
     
     FUNCTION = "do_process"
     CATEGORY = "PixNodes/JSON"
 
-    def do_process(self, json_data: str) -> Tuple[str, Dict[str, Any]]:
+    def do_process(self, json_data: str) -> Tuple[Dict[str, Any]]:
         # 1. 解析前端存储的编辑器状态 (List of Entries)
         try:
             entries = json.loads(json_data)
@@ -52,10 +53,11 @@ class CreateJsonObject:
         # 3. 生成格式化字符串
         # ensure_ascii=False: 关键参数，防止中文被转义为 \uXXXX
         # indent=2: 保持良好的缩进格式
+        # [注] 虽然不再输出字符串端口，保留此变量生成逻辑也不会报错，若不需要可忽略
         json_str_out = json.dumps(output_dict, indent=2, ensure_ascii=False)
         
-        # 返回值顺序必须与 RETURN_TYPES 一致：(json_str, json)
-        return (json_str_out, output_dict)
+        # [修改] 返回值顺序必须与 RETURN_TYPES 一致：仅返回 (json,)
+        return (output_dict,)
 
 NODE_CLASS_MAPPINGS = {
     "Pix_CreateJsonObject": CreateJsonObject

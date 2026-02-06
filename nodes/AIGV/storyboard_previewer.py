@@ -15,7 +15,7 @@ class StoryboardPreviewer:
             "optional": {
                 "image_batch": ("IMAGE",),
                 # 修改：添加 {"forceInput": True}，强制让 STRING 类型显示为连接端口
-                "video_paths_list": ("STRING", {"forceInput": True}), 
+                "video_paths_list": ("STRING,JSON", {"forceInput": True}), 
                 # 修改点 3: 进一步放宽类型，增加 LIST 支持，确保能接收来自 List 节点的输入
                 "shot_content_json": ("STRING,JSON,DICT,LIST", {"forceInput": True}), 
             },
@@ -35,23 +35,12 @@ class StoryboardPreviewer:
         video_path = None
         
         # 1. 解析路径
+        # [修改] 删除了处理 dict 和对象 .path 属性的逻辑，仅支持字符串路径
         if isinstance(video_item, str):
             video_path = video_item
-        elif isinstance(video_item, dict):
-            if 'path' in video_item: 
-                video_path = video_item['path']
-            elif 'video_path' in video_item:
-                video_path = video_item['video_path']
-            elif 'filename' in video_item:
-                fn = video_item['filename']
-                sub = video_item.get('subfolder', '')
-                video_path = folder_paths.get_annotated_filepath(fn, sub)
-                if not video_path:
-                    video_path = os.path.join(folder_paths.get_input_directory(), sub, fn)
-        elif hasattr(video_item, 'path'): 
-            video_path = video_item.path
         else:
-            video_path = str(video_item)
+            # 如果不是字符串，则不支持，直接返回 None
+            return None
 
         if not video_path:
             return None
@@ -132,6 +121,11 @@ class StoryboardPreviewer:
             # 展平列表，处理 JSON 字符串数组
             flat_video_list = []
             for item in video_paths_list:
+                # [新增] 优先检查是否为原生列表 (从 JSON 端口传来的 Python List)
+                if isinstance(item, list):
+                    flat_video_list.extend(item)
+                    continue
+
                 if isinstance(item, str):
                     s_item = item.strip()
                     if s_item.startswith("[") and s_item.endswith("]"):

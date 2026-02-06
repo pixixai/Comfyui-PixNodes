@@ -10,8 +10,10 @@ class AnyType(str):
     def __str__(self):
         return self
 
-class JsonObjectJoin:
+# [修改] 类名称 JsonObjectJoin -> JoinJsonObject
+class JoinJsonObject:
     """
+    连接到 JSON 对象
     PixNodes: 将多个动态输入合并为一个 JSON 对象 (Dictionary)。
     - 如果输入是 Dict/JSON 对象，将其属性合并到结果中。
     - 如果输入是其他值，以输入端口名作为 Key 存入结果。
@@ -31,8 +33,10 @@ class JsonObjectJoin:
             "hidden": {}
         }
 
-    RETURN_TYPES = ("STRING", "JSON")
-    RETURN_NAMES = ("JsonObject_str", "JsonObject")
+    # [修改] 删除 STRING (JsonObject_str) 输出，仅保留 JSON
+    RETURN_TYPES = ("JSON",)
+    # [修改] 输出名称改为 json_object
+    RETURN_NAMES = ("json_object",)
     
     FUNCTION = "join_to_object"
     CATEGORY = "PixNodes/JSON"
@@ -82,7 +86,7 @@ class JsonObjectJoin:
                 # 如果不是字典（如列表、字符串、数字、Tensor），将其作为 Value，端口名作为 Key
                 merged_dict[key_name] = processed_val
 
-        # 4. 自定义序列化函数 (处理 Tensor 等不可序列化对象)
+        # 4. 自定义序列化函数 (保留但不输出)
         def default_serializer(obj):
             if hasattr(obj, 'shape') and hasattr(obj, 'dtype'):
                 return f"Tensor(shape={obj.shape}, dtype={obj.dtype})"
@@ -91,19 +95,22 @@ class JsonObjectJoin:
             except:
                 return str(obj)
 
-        # 5. 生成 JSON 字符串
-        try:
-            json_str = json.dumps(merged_dict, ensure_ascii=False, indent=2, default=default_serializer)
-        except Exception as e:
-            json_str = json.dumps({"error": f"Serialization failed: {str(e)}"})
+        # [注] 不再生成并返回 JSON 字符串
+        # try:
+        #     json_str = json.dumps(merged_dict, ensure_ascii=False, indent=2, default=default_serializer)
+        # except Exception as e:
+        #     json_str = json.dumps({"error": f"Serialization failed: {str(e)}"})
 
-        return (json_str, merged_dict)
+        # [修改] 仅返回 merged_dict 对象，对应 JSON 端口
+        return (merged_dict,)
 
 # 节点映射
 NODE_CLASS_MAPPINGS = {
-    "Pix_JsonObjectJoin": JsonObjectJoin
+    # [修改] 注册名称 Pix_JsonObjectJoin -> Pix_JoinJsonObject
+    "Pix_JoinJsonObject": JoinJsonObject
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Pix_JsonObjectJoin": "JSON Object Join (PixNodes)"
+    # [修改] 显示名称 JSON Object Join -> Join JSON Object
+    "Pix_JoinJsonObject": "Join JSON Object (PixNodes)"
 }

@@ -29,7 +29,8 @@ class VideoList:
         }
 
     # 输出 VIDEO 类型 (如果支持)
-    RETURN_TYPES = (("VIDEO", "STRING") if HAS_COMFY_API else ("STRING", "STRING"))
+    # [修改] 强制 video_list 为 VIDEO 类型，video_paths_list 为 JSON 类型
+    RETURN_TYPES = ("VIDEO", "JSON")
     
     # 输出名称 [修改]: video_paths_json -> video_paths_list
     RETURN_NAMES = ("video_list", "video_paths_list")
@@ -81,18 +82,23 @@ class VideoList:
         print(f"Processing {len(path_list)} videos.")
 
         # 生成 JSON 路径列表字符串
+        # [注意] 虽然这里生成了字符串，但根据 JSON 类型的通常用法，我们返回原始列表对象 path_list
+        # 如果需要调试打印，可以使用 json_output
         json_output = json.dumps(path_list)
 
         if not path_list:
-            return ([], json_output)
+            # [修改] 第二个返回值改为 path_list (空列表对象) 以匹配 JSON 类型
+            return ([], path_list)
 
         if HAS_COMFY_API:
             # 封装为官方 Video 对象
             video_objects = [InputImpl.VideoFromFile(p) for p in path_list]
-            return (video_objects, json_output)
+            # [修改] 第二个返回值改为 path_list (列表对象) 以匹配 JSON 类型
+            return (video_objects, path_list)
         else:
             # 回退模式
-            return (path_list, json_output)
+            # [修改] 即使没有 API，也按照 RETURN_TYPES 返回 path_list 对象给 JSON 端口
+            return (path_list, path_list)
 
 NODE_CLASS_MAPPINGS = {
     "Pix_CreateVideoList": VideoList

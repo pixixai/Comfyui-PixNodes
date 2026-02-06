@@ -969,6 +969,37 @@ app.registerExtension({
                         this.thumbnailCache.clear();
                     }
                 };
+
+                // [新增] 验证图片是否存在，如果不存在则移除
+                this.validateImages = async () => {
+                    if (!this.images || this.images.length === 0) return;
+
+                    const checkImage = async (img) => {
+                        const url = `/view?filename=${encodeURIComponent(img.filename)}&type=${img.type}&subfolder=${encodeURIComponent(img.subfolder)}`;
+                        try {
+                            // 使用 HEAD 请求检查文件是否存在
+                            const resp = await fetch(url, { method: "HEAD" });
+                            return resp.ok;
+                        } catch (error) {
+                            return false;
+                        }
+                    };
+
+                    // 并行检查所有图片
+                    const results = await Promise.all(this.images.map(checkImage));
+                    
+                    // 过滤出存在的图片
+                    const validImages = this.images.filter((_, index) => results[index]);
+
+                    // 如果有图片被移除，则更新状态
+                    if (validImages.length !== this.images.length) {
+                        console.log(`[Pix_CreateImageBatch] Cleaned up ${this.images.length - validImages.length} missing images.`);
+                        this.images = validImages;
+                        // updateState 会自动处理 length === 0 的情况，切换回 Empty State
+                        updateState(); 
+                        updateNodeData();
+                    }
+                };
                 
                 // --- 核心修改: 重写 configure 方法以实现参数恢复 ---
                 // 在节点加载或刷新时，ComfyUI 会调用 configure 方法
@@ -1000,6 +1031,8 @@ app.registerExtension({
                                 this.images = loadedImages;
                                 // 立即更新状态，显示恢复的图片
                                 updateState(); 
+                                // [新增] 恢复数据后，立即验证图片有效性
+                                this.validateImages();
                             }
                         } catch (e) {
                             console.error("Pix_CreateImageBatch: 恢复图像数据失败", e);

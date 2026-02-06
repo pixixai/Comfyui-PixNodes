@@ -92,11 +92,11 @@ style.textContent = `
 
     /* 修改：序号标签样式优化 (更小, 不加粗, 透明度50%) */
     .aigv-sb-tag { 
-        position: absolute; top: 4px; left: 4px; z-index: 20; 
+        position: absolute; top: 4px; left: 10px; z-index: 20; 
         font-weight: normal; /* 不加粗 */
         font-size: 9px; /* 字体缩小 */
         color: #fff; 
-        background: rgba(0, 0, 0, 0.5); /* 透明度 50% */
+        background: rgba(22, 45, 215, 1); /* 透明度 100% */
         padding: 1px 4px; /* 背景块缩小 */
         border-radius: 3px; 
         pointer-events: none; 
@@ -105,7 +105,8 @@ style.textContent = `
     /* 信息区域 */
     .aigv-sb-info { 
         padding: 8px 10px; 
-        font-family: "Consolas", "Monaco", "Courier New", monospace; 
+        /* 修改: 将原来的 Consolas 等固定字体改为 sans-serif，统一风格并自动适配系统 */
+        font-family: sans-serif; 
         color: #ddd; 
         display: flex; 
         flex-direction: column; 
@@ -116,14 +117,29 @@ style.textContent = `
     .aigv-sb-info.no-media { padding-top: 24px; }
     .aigv-sb-row { display: block; line-height: 1.4; padding-bottom: 4px; text-align: justify; text-align-last: left; }
     .aigv-sb-row + .aigv-sb-row { border-top: 1px solid #3a3a3a; padding-top: 6px; }
-    .aigv-sb-label { display: inline; color: #b3b3b3; font-weight: normal; font-size: 10px; user-select: none; -webkit-user-select: none; cursor: default; }
+    
+    /* --- 修改点开始: 强制 Label 使用无衬线字体 --- */
+    .aigv-sb-label { 
+        display: inline; 
+        color: #b3b3b3; 
+        font-weight: normal; 
+        font-size: 10px; 
+        user-select: none; 
+        -webkit-user-select: none; 
+        cursor: default; 
+        font-family: sans-serif; /* 强制使用无衬线体 */
+    }
+    /* --- 修改点结束 --- */
+
     .aigv-sb-content { display: inline; word-break: break-word; color: #b3b3b3; font-family: sans-serif; padding-left: 2px; user-select: text; cursor: text; }
 
     /* --- 上下文菜单样式 --- */
     .aigv-ctx-menu {
         position: fixed; background: #222; border: 1px solid #444; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 6px; z-index: 9999;
-        font-family: 'Microsoft YaHei', 'SimHei', sans-serif; font-size: 13px; color: #eee; width: auto; min-width: 160px;
+        /* 修改: 移除 'Microsoft YaHei', 'SimHei' 等硬编码字体，统一使用 sans-serif */
+        font-family: sans-serif; 
+        font-size: 13px; color: #eee; width: auto; min-width: 160px;
     }
     .aigv-ctx-row { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; }
     .aigv-ctx-divider { height: 1px; background: #333; width: 100%; margin: 0; }
@@ -149,7 +165,9 @@ style.textContent = `
         position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7);
         display: flex; flex-direction: column; justify-content: center; align-items: center;
         color: white; z-index: 1000; font-size: 14px; pointer-events: none; border-radius: 4px;
-        text-align: center; padding: 20px; font-family: 'Microsoft YaHei', sans-serif;
+        text-align: center; padding: 20px; 
+        /* 修改: 移除 'Microsoft YaHei'，统一使用 sans-serif */
+        font-family: sans-serif;
     }
 `;
 document.head.appendChild(style);
@@ -262,7 +280,7 @@ app.registerExtension({
                 this.resizeObserver = new ResizeObserver(() => {});
                 this.resizeObserver.observe(this.storyboardDiv);
                 
-                // 修改: 将初始尺寸设置得更小，避免创建时留白过大 (原为 [300, 120])
+                // 修改: 将初始尺寸设置得更小，避免初始留白过大 (原为 [300, 120])
                 this.size = [200, 60];
 
                 const onRemoved = this.onRemoved;
@@ -634,7 +652,6 @@ app.registerExtension({
                                         });
                                     }
                                 } 
-                                // 已删除旧的 >> 语法兼容代码
                             }
 
                             // 应用行样式 (对齐)

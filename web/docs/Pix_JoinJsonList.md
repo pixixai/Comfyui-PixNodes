@@ -22,24 +22,7 @@
 
 ## 输出说明
 
-1. **JsonList_str (STRING)**:
-    - 格式化后的 JSON 字符串。
-    - 包含标准的缩进（2空格）和换行，适合直接阅读或保存为文件。
-    - 示例：
-        
-        ```
-        [
-          {
-            "id": 1,
-            "text": "hello"
-          },
-          "simple string",
-          "Tensor(shape=[1, 3, 512, 512])"
-        ]
-        
-        ```
-        
-2. **JsonList (JSON)**:
+- **JsonList (JSON)**:
     - Python 原生列表对象（`List[Any]`）。
     - 适合传递给下游支持列表输入的节点进行进一步处理。
 

@@ -6,6 +6,7 @@ ANY_TYPE = "*"
 
 class JsonListPluck:
     """
+    JSON列表摘取
     JSON List Pluck (PixNodes) - V2.2 Multi-Type Enhanced
     功能：从 JSON 数组或 Python 列表对象中提取（摘取）特定字段。
     增强功能：
@@ -21,8 +22,8 @@ class JsonListPluck:
     def INPUT_TYPES(s):
         return {
             "required": {
-                # 更改为 ANY_TYPE (*)，使其可以接收任何类型的输入
-                "json_list_input": (ANY_TYPE, {"forceInput": True}),
+                # [修改] 更改端口名称为 json_list
+                "json_list": (ANY_TYPE, {"forceInput": True}),
                 "filter_keys": ("STRING", {
                     "multiline": True, 
                     "default": "list", 
@@ -48,7 +49,8 @@ class JsonListPluck:
         """
         return True
 
-    RETURN_TYPES = ("STRING",) * MAX_OUTPUTS
+    # [修改] 输出类型改为 JSON
+    RETURN_TYPES = ("JSON",) * MAX_OUTPUTS
     RETURN_NAMES = tuple(f"plucked_list_{i}" for i in range(1, MAX_OUTPUTS + 1))
     OUTPUT_IS_LIST = (False,) * MAX_OUTPUTS
     
@@ -151,7 +153,8 @@ class JsonListPluck:
 
     # --- 主执行函数 ---
 
-    def pluck_list(self, json_list_input, filter_keys, merge_output, **kwargs):
+    # [修改] 参数名 json_list_input -> json_list
+    def pluck_list(self, json_list, filter_keys, merge_output, **kwargs):
         keys = [k.strip() for k in filter_keys.split('\n') if k.strip()]
         if not keys: keys = ["plucked_list_1"]
 
@@ -162,13 +165,14 @@ class JsonListPluck:
         parse_success = False
 
         # 情况 1: 输入已经是 Python 列表或字典
-        if isinstance(json_list_input, (list, dict)):
-            input_data = json_list_input
+        # [修改] 使用新的参数名 json_list
+        if isinstance(json_list, (list, dict)):
+            input_data = json_list
             parse_success = True
         
         # 情况 2: 输入是字符串（可能需要解析 JSON）
-        elif isinstance(json_list_input, str):
-            clean_body = self._extract_json_body(json_list_input)
+        elif isinstance(json_list, str):
+            clean_body = self._extract_json_body(json_list)
             try:
                 input_data = json.loads(clean_body)
                 parse_success = True
@@ -183,7 +187,7 @@ class JsonListPluck:
         
         # 情况 3: 意外类型
         else:
-            print(f"[PixJsonListPluck] Unsupported input type: {type(json_list_input)}")
+            print(f"[PixJsonListPluck] Unsupported input type: {type(json_list)}")
             input_data = []
 
         # 归一化为对象列表
@@ -206,8 +210,8 @@ class JsonListPluck:
                     new_obj[key_name] = val if found else ""
                 result_list.append(new_obj)
             
-            wrapped = json.dumps(result_list, ensure_ascii=False, indent=2)
-            valid_outputs.append(wrapped)
+            # [修改] 直接返回对象，不进行 JSON 序列化
+            valid_outputs.append(result_list)
             
         else:
             # 分离模式
@@ -217,12 +221,13 @@ class JsonListPluck:
                     found, val = self._fuzzy_match_value(item, key_name)
                     result_list.append(val if found else "")
                 
-                wrapped = json.dumps(result_list, ensure_ascii=False, indent=2)
-                valid_outputs.append(wrapped)
+                # [修改] 直接返回对象，不进行 JSON 序列化
+                valid_outputs.append(result_list)
 
         # 补齐输出端口
         if len(valid_outputs) < self.MAX_OUTPUTS:
-            valid_outputs.extend(["[]"] * (self.MAX_OUTPUTS - len(valid_outputs)))
+            # [修改] 补齐空列表对象，而不是字符串 "[]"
+            valid_outputs.extend([[]] * (self.MAX_OUTPUTS - len(valid_outputs)))
 
         return tuple(valid_outputs)
 

@@ -38,7 +38,8 @@ app.registerExtension({
 
                     if (targetCount > currentCount) {
                         for (let i = currentCount; i < targetCount; i++) {
-                            this.addOutput(keys[i], "STRING");
+                            // [修改] 动态创建的端口类型改为 JSON
+                            this.addOutput(keys[i], "JSON");
                         }
                     } 
                     else if (targetCount < currentCount) {
@@ -92,7 +93,8 @@ app.registerExtension({
                     const targetCount = keys.length;
                     
                     while (this.outputs.length < targetCount) {
-                        this.addOutput(keys[this.outputs.length], "STRING");
+                        // [修改] 动态创建的端口类型改为 JSON
+                        this.addOutput(keys[this.outputs.length], "JSON");
                     }
                     while (this.outputs.length > targetCount) {
                         this.removeOutput(this.outputs.length - 1);

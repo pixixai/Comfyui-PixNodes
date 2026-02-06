@@ -67,6 +67,24 @@ app.registerExtension({
                 this.undoStack = [];
                 this.redoStack = [];
                 
+                // --- 辅助函数：检查文件是否存在 ---
+                // 利用 ComfyUI 的 view 接口探测文件，如果返回 200 表示存在
+                const checkFileExists = async (filename, subfolder, type) => {
+                    try {
+                        // 构建查询参数
+                        const params = new URLSearchParams({
+                            filename: filename,
+                            type: type || 'input',
+                            subfolder: subfolder || ''
+                        });
+                        // 使用 HEAD 请求只检查状态头，不下载内容，速度快
+                        const resp = await api.fetchApi(`/view?${params.toString()}`, { method: "HEAD" });
+                        return resp.status === 200;
+                    } catch (error) {
+                        return false;
+                    }
+                };
+
                 // --- 核心 Widget: video_data ---
                 const dataWidget = {
                     type: "custom_video_data",
@@ -215,8 +233,15 @@ app.registerExtension({
                 // --- 内容区域 ---
                 const contentArea = document.createElement("div");
                 Object.assign(contentArea.style, {
-                    flex: "1", overflowY: "auto", padding: "4px",
-                    background: "#1a1a1a", alignContent: "start"
+                    flex: "1", 
+                    overflowY: "auto", 
+                    padding: "4px",
+                    background: "#1a1a1a", 
+                    alignContent: "start",
+                    // [关键 CSS 修复]
+                    // minHeight: "0" 允许 flex 子项缩小到内容以下，配合 overflowY 产生滚动
+                    // 如果不设为 0，flex 容器有时会拒绝缩小
+                    minHeight: "0" 
                 });
                 contentArea.onwheel = (e) => e.stopPropagation();
                 contentArea.onmousedown = (e) => e.stopPropagation();
@@ -431,9 +456,20 @@ app.registerExtension({
                     const BASE_SIZE = this.baseSize;
                     
                     if (this.viewMode === "grid") {
+                        // [关键布局修改] 使用 CSS Grid
                         Object.assign(contentArea.style, {
-                            display: "flex", flexWrap: "wrap", gap: "4px",
-                            flexDirection: "row", alignItems: "center" 
+                            display: "grid", 
+                            gap: "4px",
+                            // 自动填充，每列最小宽度 BASE_SIZE，最大 1fr (平分剩余空间)
+                            gridTemplateColumns: `repeat(auto-fill, minmax(${BASE_SIZE}px, 1fr))`,
+                            
+                            // [核心修复] 防止高度压缩堆叠
+                            // min-content 确保行高由内容撑开，如果父容器变矮，Grid 不会压缩行高，而是溢出触发 contentArea 的滚动条
+                            gridAutoRows: "min-content", 
+                            
+                            alignItems: "start", 
+                            justifyContent: "start",
+                            paddingBottom: "10px" // 底部留点空隙方便查看
                         });
 
                         this.videos.forEach((vid, idx) => {
@@ -442,36 +478,28 @@ app.registerExtension({
                             
                             item.draggable = !this.isUploading; 
                             
-                            // [关键逻辑] 
-                            // 1. 如果内存中已经有该视频的宽高(vid.w/h)，直接使用计算好的尺寸
-                            // 2. 如果没有(如刷新后)，先不显示 (display: none)，等加载完元数据再显示
-                            let initialW = BASE_SIZE;
-                            let initialH = BASE_SIZE;
                             let isKnownSize = false;
-
                             if (vid.w && vid.h) {
                                 isKnownSize = true;
-                                if (vid.w >= vid.h) {
-                                    initialH = BASE_SIZE;
-                                    initialW = BASE_SIZE * (vid.w / vid.h);
-                                } else {
-                                    initialW = BASE_SIZE;
-                                    initialH = BASE_SIZE * (vid.h / vid.w);
-                                }
                             }
 
                             Object.assign(item.style, {
-                                width: initialW + "px",
-                                height: initialH + "px",
+                                width: "100%", 
+                                height: "auto", 
+                                
                                 position: "relative",
                                 background: "#000", borderRadius: "4px",
                                 border: isSelected ? "2px solid #2196F3" : "1px solid #444", 
                                 cursor: this.isUploading ? "wait" : "grab",
                                 boxSizing: "border-box", overflow: "hidden", 
-                                // [修改] 如果不知道尺寸，先隐藏容器，避免显示正方形
+                                
                                 display: isKnownSize ? "flex" : "none",
                                 alignItems: "center", justifyContent: "center"
                             });
+
+                            if (isKnownSize) {
+                                item.style.aspectRatio = `${vid.w} / ${vid.h}`;
+                            }
 
                             const videoEl = document.createElement("video");
                             let src = `/view?filename=${encodeURIComponent(vid.filename)}&type=${vid.type}&subfolder=${encodeURIComponent(vid.subfolder)}`;
@@ -487,31 +515,19 @@ app.registerExtension({
                                 pointerEvents: "none", 
                             });
 
-                            // [关键修改] 元数据加载回调
                             const onMetadata = () => {
                                 const vw = videoEl.videoWidth;
                                 const vh = videoEl.videoHeight;
                                 if (!vw || !vh) return;
 
-                                // 更新或初始化尺寸
                                 if (vid.w !== vw || vid.h !== vh || !isKnownSize) {
                                     vid.w = vw;
                                     vid.h = vh;
                                     
-                                    let newW, newH;
-                                    if (vw >= vh) {
-                                        newH = BASE_SIZE;
-                                        newW = BASE_SIZE * (vw/vh);
-                                    } else {
-                                        newW = BASE_SIZE;
-                                        newH = BASE_SIZE * (vh/vw);
-                                    }
+                                    // 更新宽高比，高度自适应
+                                    item.style.aspectRatio = `${vw} / ${vh}`;
                                     
-                                    // 应用新尺寸并显示出来
-                                    item.style.width = newW + "px";
-                                    item.style.height = newH + "px";
-                                    item.style.flexBasis = newW + "px";
-                                    item.style.display = "flex"; // 视频准备好了，显示！
+                                    item.style.display = "flex"; 
                                     
                                     isKnownSize = true;
                                 }
@@ -520,7 +536,6 @@ app.registerExtension({
                             videoEl.onloadedmetadata = onMetadata;
                             videoEl.src = src;
 
-                            // 检查缓存
                             if (videoEl.readyState >= 1) {
                                 onMetadata();
                             }
@@ -757,8 +772,34 @@ app.registerExtension({
                         try {
                             const loaded = JSON.parse(w.value);
                             if (Array.isArray(loaded) && loaded.length > 0) {
+                                // 1. 先临时赋值并显示（避免校验过程中的界面空白）
                                 this.videos = loaded;
                                 updateState();
+
+                                // 2. 启动异步校验流程
+                                (async () => {
+                                    const verifiedVideos = [];
+                                    let hasChanges = false;
+
+                                    for (const vid of loaded) {
+                                        // 只检查指定路径，不存在就丢弃
+                                        let exists = await checkFileExists(vid.filename, vid.subfolder, vid.type);
+                                        
+                                        if (exists) {
+                                            verifiedVideos.push(vid);
+                                        } else {
+                                            // 找不到就标记为有变动，不加入 verifiedVideos，相当于删除
+                                            hasChanges = true;
+                                        }
+                                    }
+
+                                    // 3. 如果有变动（文件丢失），刷新状态
+                                    if (hasChanges) {
+                                        this.videos = verifiedVideos;
+                                        updateState();       // 刷新 UI (如果删光了会显示上传界面)
+                                        updateNodeData();    // 更新 Widget 数据 (下次保存就是干净的了)
+                                    }
+                                })();
                             }
                         } catch (e) {
                             console.error("Pix_CreateVideoList: Failed to restore videos", e);

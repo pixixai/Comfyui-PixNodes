@@ -11,8 +11,9 @@ class AnyType(str):
     def __str__(self):
         return self # 保持原始字符串值（通常是 "*"）
 
-class JsonListJoin:
+class JoinJsonList:
     """
+    连接到 JSON 列表
     PixNodes: 将多个动态输入合并为一个 JSON 列表。
     支持智能解析输入字符串，避免二次转义导致的格式混乱。
     """
@@ -31,8 +32,10 @@ class JsonListJoin:
             "hidden": {}
         }
 
-    RETURN_TYPES = ("STRING", "JSON")
-    RETURN_NAMES = ("JsonList_str", "JsonList")
+    # [修改] 删除 STRING (JsonList_str) 输出，仅保留 JSON
+    RETURN_TYPES = ("JSON",)
+    # [修改] 输出名称改为 json_list
+    RETURN_NAMES = ("json_list",)
     
     FUNCTION = "join_to_list"
     CATEGORY = "PixNodes/JSON"
@@ -79,7 +82,7 @@ class JsonListJoin:
                 # 其他对象（Dict, List, Tensor 等）直接添加
                 processed_list.append(val)
 
-        # 3. 自定义序列化函数
+        # 3. 自定义序列化函数 (保留逻辑但不输出，如果未来需要调试可以随时加回来)
         def default_serializer(obj):
             if hasattr(obj, 'shape') and hasattr(obj, 'dtype'):
                 return f"Tensor(shape={obj.shape}, dtype={obj.dtype})"
@@ -89,20 +92,15 @@ class JsonListJoin:
             except:
                 return str(obj)
 
-        # 4. 生成格式化的 JSON 字符串
-        try:
-            # indent=2 保证了输出的字符串有正确的缩进和换行
-            json_str = json.dumps(processed_list, ensure_ascii=False, indent=2, default=default_serializer)
-        except Exception as e:
-            json_str = json.dumps({"error": f"Serialization failed: {str(e)}"})
-
-        # 输出：(格式化好的字符串, Python列表对象)
-        return (json_str, processed_list)
+        # [注] 原有的 JSON 字符串生成逻辑已不再作为输出返回
+        
+        # [修改] 输出：仅返回 Python 列表对象，对应 JSON 端口
+        return (processed_list,)
 
 NODE_CLASS_MAPPINGS = {
-    "Pix_JsonListJoin": JsonListJoin
+    "Pix_JoinJsonList": JoinJsonList
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Pix_JsonListJoin": "JSON List Join (PixNodes)"
+    "Pix_JoinJsonList": "Join JSON List (PixNodes)"
 }

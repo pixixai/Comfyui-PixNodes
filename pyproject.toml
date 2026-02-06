@@ -1,7 +1,7 @@
 [project]
 name = "pixnodes"
 description = "节点工具箱、视频图像批处理、JSON数据处理"
-version = "1.0.7"
+version = "1.0.8"
 license = {file = "LICENSE"} 
 # classifiers = [
 #     # For OS-independent nodes (works on all operating systems)

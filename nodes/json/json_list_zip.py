@@ -2,7 +2,7 @@ import json
 
 class JsonListZip:
     """
-    JSON List Zip (PixNodes)
+    JSON列表同步合并：JSON List Zip (PixNodes)
     功能：接收多个 JSON 列表（数组），像拉链一样将它们按索引一一对应合并。
     
     特性：
@@ -26,9 +26,11 @@ class JsonListZip:
             "optional": {} 
         }
 
-    # 修改输出定义：增加原始列表类型的输出
-    RETURN_TYPES = ("STRING", "LIST")
-    RETURN_NAMES = ("JsonList_str", "JsonList")
+    # [修改] 仅保留 JSON 输出，对应 Python 列表对象
+    RETURN_TYPES = ("JSON",)
+    # [修改] 输出名称改为 json_list
+    RETURN_NAMES = ("json_list",)
+    
     FUNCTION = "zip_lists"
     CATEGORY = "PixNodes/JSON"
 
@@ -100,7 +102,8 @@ class JsonListZip:
         # 1. 解析 Keys 配置
         raw_keys = [k.strip() for k in merge_keys.split('\n') if k.strip()]
         if not raw_keys:
-            return ("[]", [])
+            # [修改] 返回单个空列表
+            return ([],)
 
         key_configs = []
         normal_data_lengths = []
@@ -189,9 +192,9 @@ class JsonListZip:
 
             merged_result.append(item_obj)
 
-        # 5. 返回结果 (字符串格式 和 原始列表格式)
-        json_output = json.dumps(merged_result, ensure_ascii=False, indent=2)
-        return (json_output, merged_result)
+        # 5. 返回结果 
+        # [修改] 不再生成 json_output 字符串，仅返回对象列表
+        return (merged_result,)
 
 NODE_CLASS_MAPPINGS = {
     "Pix_JsonListZip": JsonListZip

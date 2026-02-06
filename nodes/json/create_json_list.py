@@ -3,7 +3,7 @@ from typing import Tuple, Dict, Any, List
 
 class CreateJsonList:
     """
-    PixNodes - 创建JSON列表 (List)
+    创建 JSON 列表
     
     功能：
     提供一个可视化的列表编辑界面。
@@ -20,13 +20,15 @@ class CreateJsonList:
             }
         }
 
-    RETURN_TYPES = ("STRING", "JSON") 
-    RETURN_NAMES = ("json_str", "list")
+    # [修改] 删除 STRING (json_str) 输出，仅保留 JSON
+    RETURN_TYPES = ("JSON",) 
+    # [修改] 输出名称改为 json_list
+    RETURN_NAMES = ("json_list",)
     
     FUNCTION = "do_process"
     CATEGORY = "PixNodes/JSON"
 
-    def do_process(self, json_data: str) -> Tuple[str, List[Any]]:
+    def do_process(self, json_data: str) -> Tuple[List[Any]]:
         # 1. 解析前端存储的编辑器状态
         try:
             entries = json.loads(json_data)
@@ -52,11 +54,12 @@ class CreateJsonList:
             output_list = []
 
         # 3. 生成格式化字符串
+        # [注] 虽然不再输出字符串端口，保留此变量生成逻辑也不会报错，若不需要可忽略
         # indent=2: 保持良好的缩进格式
         json_str_out = json.dumps(output_list, indent=2, ensure_ascii=False)
         
-        # 返回值: (JSON字符串, Python列表对象)
-        return (json_str_out, output_list)
+        # [修改] 返回值: (Python列表对象,)，仅对应 JSON 端口
+        return (output_list,)
 
 NODE_CLASS_MAPPINGS = {
     "Pix_CreateJsonList": CreateJsonList

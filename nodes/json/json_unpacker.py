@@ -2,6 +2,7 @@ import json
 
 class JsonUnpacker:
     """
+    JSON 解包
     一个用于解包JSON数据并将其格式化为字符串的ComfyUI节点。
     包含智能修复功能，可处理截断的JSON数据。
     支持自定义多级分隔符（通过多行文本定义）。

@@ -4,6 +4,7 @@ import re
 # --- 核心修复：定义万能类型 ---
 class AnyType(str):
     """
+    JSON 对象提取
     一个特殊的字符串类，与任何对象比较时都返回 True。
     用于绕过 ComfyUI 后端的严格类型检查。
     """
@@ -39,9 +40,9 @@ class JsonObjectExtract:
     def INPUT_TYPES(s):
         return {
             "required": {
-                # 修改为 ANY 对象，它在与上游的 "JSON", "STRING" 等类型比较时
-                # 永远返回 True，从而通过后端验证
-                "json_input": (ANY, {"forceInput": True}),
+                # [修改] 更改端口名称为 json_object
+                # 修改为 ANY 对象，它在与上游的 "JSON", "STRING" 等类型比较时永远返回 True
+                "json_object": (ANY, {"forceInput": True}),
                 "match_keys": ("STRING", {
                     "multiline": True, 
                     "default": "object_1", 
@@ -58,7 +59,8 @@ class JsonObjectExtract:
             }
         }
 
-    RETURN_TYPES = ("STRING",) * MAX_OUTPUTS
+    # [修改] 输出类型改为 JSON
+    RETURN_TYPES = ("JSON",) * MAX_OUTPUTS
     RETURN_NAMES = tuple(f"object_{i}" for i in range(1, MAX_OUTPUTS + 1))
     OUTPUT_IS_LIST = (False,) * MAX_OUTPUTS
     
@@ -195,7 +197,8 @@ class JsonObjectExtract:
                     except: return val
         return None
 
-    def extract(self, json_input, match_keys, merge_output, **kwargs):
+    # [修改] 参数名 json_input -> json_object
+    def extract(self, json_object, match_keys, merge_output, **kwargs):
         keys = [k.strip() for k in match_keys.split('\n') if k.strip()]
         if not keys: keys = ["object_1"]
 
@@ -205,13 +208,14 @@ class JsonObjectExtract:
         parse_success = False
         
         # --- 1. 数据解析：支持对象或字符串 ---
-        if isinstance(json_input, (dict, list)):
+        # [修改] 使用新的参数名 json_object
+        if isinstance(json_object, (dict, list)):
             # 如果已经是结构化数据（来自其他节点输出的列表或字典）
-            data = json_input
+            data = json_object
             parse_success = True
         else:
             # 尝试作为字符串解析
-            text_input = str(json_input)
+            text_input = str(json_object)
             clean_body = self._extract_json_body(text_input)
             
             try:
@@ -235,15 +239,14 @@ class JsonObjectExtract:
                 if parse_success:
                     raw_val = self._deep_search(data, key_name)
                 
-                # 正则回退仅在原始输入是字符串且解析失败时尝试，或者在对象搜索失败时尝试（如果能获取到原始文本的话）
-                # 这里简单处理：如果 json_input 是字符串，且结构化搜索失败，尝试正则
-                if raw_val is None and isinstance(json_input, str):
-                    raw_val = self._regex_fallback(json_input, key_name)
+                # 正则回退
+                if raw_val is None and isinstance(json_object, str):
+                    raw_val = self._regex_fallback(json_object, key_name)
                 
                 merged_obj[key_name] = raw_val
             
-            wrapped = json.dumps(merged_obj, ensure_ascii=False, indent=2)
-            valid_outputs.append(wrapped)
+            # [修改] 直接返回对象
+            valid_outputs.append(merged_obj)
             
         else:
             # --- 分离模式 ---
@@ -252,8 +255,8 @@ class JsonObjectExtract:
                 if parse_success:
                     raw_val = self._deep_search(data, key_name)
                 
-                if raw_val is None and isinstance(json_input, str):
-                    raw_val = self._regex_fallback(json_input, key_name)
+                if raw_val is None and isinstance(json_object, str):
+                    raw_val = self._regex_fallback(json_object, key_name)
                 
                 final_output = None
                 
@@ -262,17 +265,19 @@ class JsonObjectExtract:
                 elif isinstance(raw_val, list):
                     final_output = raw_val
                 elif raw_val is None:
+                    # [保留] 此处保持提取失败返回空列表的逻辑，或根据需要改为 None
                     final_output = []
                 else:
-                    final_output = [raw_val]
+                    final_output = raw_val # [修改] 不再强制包装成列表，保持原始值
                 
-                wrapped = json.dumps(final_output, ensure_ascii=False, indent=2)
-                valid_outputs.append(wrapped)
+                # [修改] 直接返回对象
+                valid_outputs.append(final_output)
 
         # 补齐端口
         current_len = len(valid_outputs)
         if current_len < self.MAX_OUTPUTS:
-            valid_outputs += ["[]"] * (self.MAX_OUTPUTS - current_len)
+            # [修改] 填充 None 代替字符串 "[]"
+            valid_outputs += [None] * (self.MAX_OUTPUTS - current_len)
 
         return tuple(valid_outputs)
 

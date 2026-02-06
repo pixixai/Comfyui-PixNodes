@@ -24,22 +24,8 @@
     - 如果输入为 `null` 或未连接，该项会被忽略。
 
 ## 输出说明
-
-1. **JsonObject_str (STRING)**:
-    - 格式化后的 JSON 字符串。
-    - 包含标准的缩进（2空格）和换行，适合直接阅读或保存为文件。
-    - 示例：
-        
-        ```
-        {
-          "model": "sdxl",
-          "seed": 12345,
-          "AnyData_3": "Simple String Value"
-        }
-        
-        ```
-        
-2. **JsonObject (JSON)**:
+ 
+- **JsonObject (JSON)**:
     - Python 原生字典对象（`Dict[str, Any]`）。
     - 适合传递给下游支持字典输入的节点。
 
