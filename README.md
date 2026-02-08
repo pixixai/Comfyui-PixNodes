@@ -4,107 +4,107 @@ JSON处理、视频列表、图像批次、图像处理、循环、翻译、LLM�
 
 ## 详细说明文档导航
 
-<!-- INCLUDE:web/docs/Pix_ColorPicker.md -->
+[拾色器节点](web/docs/Pix_ColorPicker.md)
 
-<!-- INCLUDE:web/docs/Pix_CreateImageBatch.md -->
+[创建图像批次](web/docs/Pix_CreateImageBatch.md)
 
-<!-- INCLUDE:web/docs/Pix_CreateEmptyList.md -->
+[创建空列表](web/docs/Pix_CreateEmptyList.md)
 
-<!-- INCLUDE:web/docs/Pix_ImageCropEdge.md -->
+[图像裁边](web/docs/Pix_ImageCropEdge.md)
 
-<!-- INCLUDE:web/docs/Pix_ImageComparer.md -->
+[图像对比](web/docs/Pix_ImageComparer.md)
 
-<!-- INCLUDE:web/docs/Pix_ImageListToBatch.md -->
+[图像列表转批次](web/docs/Pix_ImageListToBatch.md)
 
-<!-- INCLUDE:web/docs/Pix_ImageSplitter.md -->
+[图像切分](web/docs/Pix_ImageSplitter.md)
 
-<!-- INCLUDE:web/docs/Pix_ImageBatchCompose.md -->
+[组合图像批次](web/docs/Pix_ImageBatchCompose.md)
 
 ### 逻辑
 
-<!-- INCLUDE:web/docs/Pix_Compare.md -->
+[逻辑比较器](web/docs/Pix_Compare.md)
 
-<!-- INCLUDE:web/docs/Pix_AnyDataIsEmpty.md -->
+[是否空值](web/docs/Pix_AnyDataIsEmpty.md)
 
-<!-- INCLUDE:web/docs/Pix_MathInt.md -->
+[整数运算器](web/docs/Pix_MathInt.md)
 
-<!-- INCLUDE:web/docs/Pix_IfElseDispatcher.md -->
+[IfElse 分发器](web/docs/Pix_IfElseDispatcher.md)
 
-<!-- INCLUDE:web/docs/Pix_IfElseLogicGate.md -->
+[IfElse 逻辑阀](web/docs/Pix_IfElseLogicGate.md)
 
 ### 文本
 
-<!-- INCLUDE:web/docs/Pix_LoadTextFromFolderNode.md -->
+[从文件夹加载文本](web/docs/Pix_LoadTextFromFolderNode.md)
 
-<!-- INCLUDE:web/docs/Pix_UniversalUnicodeDecoder.md -->
+[通用 Unicode 解码器](web/docs/Pix_UniversalUnicodeDecoder.md)
 
 ### AIGV
 
-<!-- INCLUDE:web/docs/Pix_StoryboardPreviewer.md -->
+[分镜预览](web/docs/Pix_StoryboardPreviewer.md)
 
-<!-- INCLUDE:web/docs/Pix_GridStoryboardPrompt.md -->
+[🎞️ 网格分镜提示词](web/docs/Pix_GridStoryboardPrompt.md)
 
 ### 视频
 
-<!-- INCLUDE:web/docs/Pix_CreateVideoList.md -->
+[创建视频列表](web/docs/Pix_CreateVideoList.md)
 
-<!-- INCLUDE:web/docs/Pix_GetVideoFromPathList.md -->
+[从路径列表获取视频](web/docs/Pix_GetVideoFromPathList.md)
 
-<!-- INCLUDE:web/docs/Pix_GetVideoFromVideoList.md -->
+[从视频列表获取视频](web/docs/Pix_GetVideoFromVideoList.md)
 
 ### JSON
 
-<!-- INCLUDE:web/docs/Pix_CreateJsonObject.md -->
+[创建 JSON 对象](web/docs/Pix_CreateJsonObject.md)
 
-<!-- INCLUDE:web/docs/Pix_CreateJsonList.md -->
+[创建 JSON 列表](web/docs/Pix_CreateJsonList.md)
 
-<!-- INCLUDE:web/docs/Pix_JsonObjectCombine.md -->
+[JSON 对象合并](web/docs/Pix_JsonObjectCombine.md)
 
-<!-- INCLUDE:web/docs/Pix_JoinJsonList.md -->
+[连接到 JSON 列表](web/docs/Pix_JoinJsonList.md)
 
-<!-- INCLUDE:web/docs/Pix_JoinJsonObject.md -->
+[连接到JSON对象](web/docs/Pix_JoinJsonObject.md)
 
-<!-- INCLUDE:web/docs/Pix_JsonObjectExtract.md -->
+[JSON 对象提取](web/docs/Pix_JsonObjectExtract.md)
 
-<!-- INCLUDE:web/docs/Pix_JsonUnpacker.md -->
+[JSON 解包](web/docs/Pix_JsonUnpacker.md)
 
-<!-- INCLUDE:web/docs/Pix_JsonListZip.md -->
+[JSON 列表同步合并](web/docs/Pix_JsonListZip.md)
 
-<!-- INCLUDE:web/docs/Pix_JsonListPluck.md -->
+[JSON列表摘取](web/docs/Pix_JsonListPluck.md)
 
-<!-- INCLUDE:web/docs/Pix_JSONSlicer.md -->
+[JSON切片工具](web/docs/Pix_JSONSlicer.md)
 
-<!-- INCLUDE:web/docs/Pix_JsonMutation.md -->
+[JSON 编辑器](web/docs/Pix_JsonMutation.md)
 
-<!-- INCLUDE:web/docs/Pix_JsonKeyValueSplit.md -->
+[JSON键值拆分](web/docs/Pix_JsonKeyValueSplit.md)
 
 ### LLM
 
-<!-- INCLUDE:web/docs/Pix_KimiApiNode.md -->
+[Kimi 助手](web/docs/Pix_KimiApiNode.md)
 
-<!-- INCLUDE:web/docs/Pix_QwenApiNode.md -->
+[通义千问API](web/docs/Pix_QwenApiNode.md)
 
-<!-- INCLUDE:web/docs/Pix_DeepSeekApiNode.md -->
+[DeepSeek 助手](web/docs/Pix_DeepSeekApiNode.md)
 
-<!-- INCLUDE:web/docs/Pix_DoubaoApiNode.md -->
+[豆包助手](web/docs/Pix_DoubaoApiNode.md)
 
 ### 循环
 
-<!-- INCLUDE:web/docs/Pix_ForLoopEnd.md -->
+[for循环结束](web/docs/Pix_ForLoopEnd.md)
 
-<!-- INCLUDE:web/docs/Pix_ForLoopStart.md -->
+[for循环开始](web/docs/Pix_ForLoopStart.md)
 
-<!-- INCLUDE:web/docs/Pix_ListFromLoop.md -->
+[从循环获取列表](web/docs/Pix_ListFromLoop.md)
 
-<!-- INCLUDE:web/docs/Pix_WhileLoopEnd.md -->
+[While 循环结束](web/docs/Pix_WhileLoopEnd.md)
 
-<!-- INCLUDE:web/docs/Pix_WhileLoopStart.md -->
+[While 循环开始](web/docs/Pix_WhileLoopStart.md)
 
 ### 翻译
 
-<!-- INCLUDE:web/docs/Pix_BaiduTranslateNode.md -->
+[百度翻译](web/docs/Pix_BaiduTranslateNode.md)
 
-<!-- INCLUDE:web/docs/Pix_ChatGLM4Translate.md -->
+[ChatGLM4 翻译](web/docs/Pix_ChatGLM4Translate.md)
 
 
 ## 安装方法
