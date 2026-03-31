@@ -19,19 +19,22 @@ class whileLoopStart:
             },
             "optional": {},
         }
-        for i in range(MAX_FLOW_NUM):
+        # 【修改点1】Python名称提取从 1 开始到 20 结束，完美匹配前端 UI
+        for i in range(1, MAX_FLOW_NUM + 1):
             inputs["optional"]["initial_value_%d" % i] = (any_type,)
         return inputs
 
     RETURN_TYPES = ByPassTypeTuple(tuple(["FLOW_CONTROL"] + [any_type] * MAX_FLOW_NUM))
-    RETURN_NAMES = ByPassTypeTuple(tuple(["flow"] + ["value_%d" % i for i in range(MAX_FLOW_NUM)]))
+    # 【修改点2】返回名称也从 1 开始
+    RETURN_NAMES = ByPassTypeTuple(tuple(["flow"] + ["value_%d" % i for i in range(1, MAX_FLOW_NUM + 1)]))
     FUNCTION = "while_loop_open"
     CATEGORY = "PixNodes/loop"
 
     def while_loop_open(self, condition, **kwargs):
         from comfy_execution.graph import ExecutionBlocker
         values = []
-        for i in range(MAX_FLOW_NUM):
+        # 【修改点3】按 1 到 20 的顺序去 kwargs 字典里抓取数据
+        for i in range(1, MAX_FLOW_NUM + 1):
             val = kwargs.get("initial_value_%d" % i, None)
             values.append(val if condition else ExecutionBlocker(None))
         return tuple(["stub"] + values)
@@ -53,12 +56,12 @@ class whileLoopEnd:
                 "unique_id": "UNIQUE_ID",
             }
         }
-        for i in range(MAX_FLOW_NUM):
+        for i in range(1, MAX_FLOW_NUM + 1):
             inputs["optional"]["initial_value_%d" % i] = (any_type,)
         return inputs
 
     RETURN_TYPES = ByPassTypeTuple(tuple([any_type] * MAX_FLOW_NUM))
-    RETURN_NAMES = ByPassTypeTuple(tuple(["value_%d" % i for i in range(MAX_FLOW_NUM)]))
+    RETURN_NAMES = ByPassTypeTuple(tuple(["value_%d" % i for i in range(1, MAX_FLOW_NUM + 1)]))
     FUNCTION = "while_loop_close"
     CATEGORY = "PixNodes/loop"
 
@@ -74,7 +77,6 @@ class whileLoopEnd:
                 display_id = dynprompt.get_display_node_id(parent_id)
                 display_node = dynprompt.get_node(display_id)
                 class_type = display_node["class_type"]
-                # [Update] 黑名单更新：包含所有 Pix_ 前缀的循环节点ID
                 loop_node_types = [
                     'Pix_ForLoopEnd', 'For Loop End',
                     'Pix_WhileLoopEnd', 'While Loop End'
@@ -96,7 +98,7 @@ class whileLoopEnd:
 
     def while_loop_close(self, flow, condition, dynprompt=None, unique_id=None, **kwargs):
         if not condition:
-            return tuple(kwargs.get("initial_value_%d" % i, None) for i in range(MAX_FLOW_NUM))
+            return tuple(kwargs.get("initial_value_%d" % i, None) for i in range(1, MAX_FLOW_NUM + 1))
 
         from comfy_execution.graph_utils import GraphBuilder, is_link
         
@@ -131,11 +133,12 @@ class whileLoopEnd:
                     node.set_input(k, v)
 
         new_open = graph.lookup_node(open_node)
-        for i in range(MAX_FLOW_NUM):
+        for i in range(1, MAX_FLOW_NUM + 1):
             key = "initial_value_%d" % i
             new_open.set_input(key, kwargs.get(key, None))
             
         my_clone = graph.lookup_node("Recurse")
+        # 注意：此处依然使用 range(MAX_FLOW_NUM) 0~19，因为这里读取的是底层节点输出槽的原始物理索引（固定20个槽）
         result = [my_clone.out(i) for i in range(MAX_FLOW_NUM)]
         
         return {
