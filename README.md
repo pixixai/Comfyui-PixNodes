@@ -12,7 +12,7 @@ JSON处理、视频列表、图像批次、图像处理、循环、翻译、LLM�
 
 [图像裁边](web/docs/Pix_ImageCropEdge.md)
 
-[图像对比](web/docs/Pix_ImageComparer.md)
+[对比查看器](web/docs/Pix_ComparisonViewer.md)
 
 [图像列表转批次](web/docs/Pix_ImageListToBatch.md)
 
